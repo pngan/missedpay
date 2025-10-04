@@ -16,14 +16,14 @@ public class AccountController : ControllerBase
     [HttpGet]
     public async Task<ActionResult<IEnumerable<Account>>> GetAccount()
     {
-        return await _context.Account.ToListAsync();
+        return await _context.Accounts.ToListAsync();
     }
 
     // GET: api/Account/5
     [HttpGet("{id}")]
     public async Task<ActionResult<Account>> GetAccount(string id)
     {
-        var account = await _context.Account.FindAsync(id);
+        var account = await _context.Accounts.FindAsync(id);
 
         if (account == null)
         {
@@ -69,7 +69,7 @@ public class AccountController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<Account>> PostAccount(Account account)
     {
-        _context.Account.Add(account);
+        _context.Accounts.Add(account);
         await _context.SaveChangesAsync();
 
         return CreatedAtAction("GetAccount", new { id = account.Id }, account);
@@ -79,13 +79,13 @@ public class AccountController : ControllerBase
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteAccount(string? id)
     {
-        var account = await _context.Account.FindAsync(id);
+        var account = await _context.Accounts.FindAsync(id);
         if (account == null)
         {
             return NotFound();
         }
 
-        _context.Account.Remove(account);
+        _context.Accounts.Remove(account);
         await _context.SaveChangesAsync();
 
         return NoContent();
@@ -93,6 +93,6 @@ public class AccountController : ControllerBase
 
     private bool AccountExists(string? id)
     {
-        return _context.Account.Any(e => e.Id == id);
+        return _context.Accounts.Any(e => e.Id == id);
     }
 }

@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
+
 var builder = WebApplication.CreateBuilder(args);
-var connectionString = builder.Configuration.GetConnectionString("MissedPayDbContext") ?? throw new InvalidOperationException("Connection string 'MissedPayDbContext' not found.");
+var connectionString = builder.Configuration.GetConnectionString("MissedPayDbContext") ?? "Host=localhost;Database=missedpay;Username=postgres;Password=postgres";
 
 builder.Services.AddDbContext<MissedPayDbContext>(options => options.UseNpgsql(connectionString));
 
@@ -8,6 +9,7 @@ builder.Services.AddDbContext<MissedPayDbContext>(options => options.UseNpgsql(c
 builder.AddServiceDefaults();
 
 // Add services to the container.
+builder.Services.AddControllers();
 builder.Services.AddProblemDetails();
 
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
@@ -39,6 +41,7 @@ app.MapGet("/weatherforecast", () =>
 })
 .WithName("GetWeatherForecast");
 
+app.MapControllers();
 app.MapDefaultEndpoints();
 
 app.Run();
