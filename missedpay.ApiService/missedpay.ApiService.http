@@ -174,3 +174,31 @@ Content-Type: application/json
 DELETE {{ApiService_HostAddress}}/api/Transaction/trans_test123
 
 ###
+
+# =========================
+# Admin Endpoints
+# =========================
+
+### GET - Database Statistics
+GET {{ApiService_HostAddress}}/api/Admin/stats
+Accept: application/json
+
+###
+
+### DELETE - Clear All Data (USE WITH CAUTION!)
+DELETE {{ApiService_HostAddress}}/api/Admin/clear-all-data
+Accept: application/json
+
+###
+
+### DELETE - Clear All Transactions Only
+DELETE {{ApiService_HostAddress}}/api/Admin/clear-transactions
+Accept: application/json
+
+###
+
+### DELETE - Clear All Accounts (and related transactions)
+DELETE {{ApiService_HostAddress}}/api/Admin/clear-accounts
+Accept: application/json
+
+###
