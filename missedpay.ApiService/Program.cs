@@ -1,4 +1,8 @@
+using Microsoft.EntityFrameworkCore;
 var builder = WebApplication.CreateBuilder(args);
+var connectionString = builder.Configuration.GetConnectionString("MissedPayDbContext") ?? throw new InvalidOperationException("Connection string 'MissedPayDbContext' not found.");
+
+builder.Services.AddDbContext<MissedPayDbContext>(options => options.UseNpgsql(connectionString));
 
 // Add service defaults & Aspire client integrations.
 builder.AddServiceDefaults();
