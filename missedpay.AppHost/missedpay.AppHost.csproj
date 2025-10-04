@@ -12,7 +12,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\missedpay.ApiService\missedpay.ApiService.csproj" />
-    <ProjectReference Include="..\missedpay.Web\missedpay.Web.csproj" />
   </ItemGroup>
 
   <ItemGroup>
