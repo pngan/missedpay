@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="missedpay.ApiService/missedpay.ApiService.csproj" />
+  <Project Path="missedpay.AppHost/missedpay.AppHost.csproj" />
+  <Project Path="missedpay.ServiceDefaults/missedpay.ServiceDefaults.csproj" />
+  <Project Path="missedpay.Web/missedpay.Web.csproj" />
+</Solution>
