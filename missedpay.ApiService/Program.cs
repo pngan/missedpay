@@ -1,12 +1,12 @@
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
-var connectionString = builder.Configuration.GetConnectionString("MissedPayDbContext") ?? "Host=localhost;Database=missedpay;Username=postgres;Password=postgres";
-
-builder.Services.AddDbContext<MissedPayDbContext>(options => options.UseNpgsql(connectionString));
 
 // Add service defaults & Aspire client integrations.
 builder.AddServiceDefaults();
+
+// Add PostgreSQL with Aspire - this will automatically use the connection string from Aspire
+builder.AddNpgsqlDbContext<MissedPayDbContext>("missedpaydb");
 
 // Add services to the container.
 builder.Services.AddControllers();
@@ -16,6 +16,45 @@ builder.Services.AddProblemDetails();
 builder.Services.AddOpenApi();
 
 var app = builder.Build();
+
+// Apply database migrations automatically on startup with retry logic
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<MissedPayDbContext>();
+    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+    
+    var retryCount = 0;
+    var maxRetries = 15;
+    var delay = TimeSpan.FromSeconds(3);
+    
+    while (retryCount < maxRetries)
+    {
+        try
+        {
+            logger.LogInformation("Attempting to apply database migrations (attempt {Attempt}/{MaxRetries})...", retryCount + 1, maxRetries);
+            
+            // First, ensure we can connect to the database
+            await dbContext.Database.CanConnectAsync();
+            logger.LogInformation("Database connection successful.");
+            
+            // Then apply migrations
+            await dbContext.Database.MigrateAsync();
+            logger.LogInformation("Database migrations applied successfully.");
+            break;
+        }
+        catch (Exception ex) when (retryCount < maxRetries - 1)
+        {
+            retryCount++;
+            logger.LogWarning(ex, "Failed to apply migrations. Retrying in {Delay} seconds... (attempt {Attempt}/{MaxRetries})", delay.TotalSeconds, retryCount, maxRetries);
+            await Task.Delay(delay);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Failed to apply database migrations after {MaxRetries} attempts.", maxRetries);
+            throw;
+        }
+    }
+}
 
 // Configure the HTTP request pipeline.
 app.UseExceptionHandler();
