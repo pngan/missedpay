@@ -273,7 +273,7 @@ const TransactionList = ({ transactions, accountId, account }) => {
               textAlign: 'right',
               flexShrink: 0
             }}>
-              {transaction.amount < 0 ? '-' : '+'}
+              {transaction.amount < 0 ? '-' : ''}
               {formatCurrency(Math.abs(transaction.amount))}
             </div>
           </div>
