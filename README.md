@@ -70,7 +70,7 @@ See `MULTI_TENANCY.md` for detailed documentation.
 
 ## Running the Application
 
-1. Ensure PostgreSQL is running
+1. cd missedpay.AppHost
 2. Set up your `.env` file (see above)
 3. Run with .NET Aspire:
    ```bash
