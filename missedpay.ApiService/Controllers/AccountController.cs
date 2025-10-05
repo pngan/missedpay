@@ -29,7 +29,8 @@ public class AccountController : ControllerBase
     public async Task<ActionResult<Account>> GetAccount(string id)
     {
         _context.SetTenantId(_tenantProvider.GetTenantId());
-        var account = await _context.Accounts.FindAsync(id);
+        var account = await _context.Accounts
+            .FirstOrDefaultAsync(a => a.Id == id);
 
         if (account == null)
         {
@@ -49,7 +50,12 @@ public class AccountController : ControllerBase
             return BadRequest();
         }
 
-        _context.SetTenantId(_tenantProvider.GetTenantId());
+        var tenantId = _tenantProvider.GetTenantId();
+        _context.SetTenantId(tenantId);
+        
+        // Ensure the account maintains the correct tenant ID (prevent tenant switching)
+        account.TenantId = tenantId;
+        
         _context.Entry(account).State = EntityState.Modified;
 
         try
@@ -76,7 +82,12 @@ public class AccountController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<Account>> PostAccount(Account account)
     {
-        _context.SetTenantId(_tenantProvider.GetTenantId());
+        var tenantId = _tenantProvider.GetTenantId();
+        _context.SetTenantId(tenantId);
+        
+        // Ensure the account has the correct tenant ID
+        account.TenantId = tenantId;
+        
         _context.Accounts.Add(account);
         await _context.SaveChangesAsync();
 
@@ -88,7 +99,8 @@ public class AccountController : ControllerBase
     public async Task<IActionResult> DeleteAccount(string? id)
     {
         _context.SetTenantId(_tenantProvider.GetTenantId());
-        var account = await _context.Accounts.FindAsync(id);
+        var account = await _context.Accounts
+            .FirstOrDefaultAsync(a => a.Id == id);
         if (account == null)
         {
             return NotFound();

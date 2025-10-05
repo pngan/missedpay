@@ -29,7 +29,8 @@ public class TransactionController : ControllerBase
     public async Task<ActionResult<Transaction>> GetTransaction(string id)
     {
         _context.SetTenantId(_tenantProvider.GetTenantId());
-        var transaction = await _context.Transactions.FindAsync(id);
+        var transaction = await _context.Transactions
+            .FirstOrDefaultAsync(t => t.Id == id);
 
         if (transaction == null)
         {
@@ -49,7 +50,12 @@ public class TransactionController : ControllerBase
             return BadRequest();
         }
 
-        _context.SetTenantId(_tenantProvider.GetTenantId());
+        var tenantId = _tenantProvider.GetTenantId();
+        _context.SetTenantId(tenantId);
+        
+        // Ensure the transaction maintains the correct tenant ID (prevent tenant switching)
+        transaction.TenantId = tenantId;
+        
         _context.Entry(transaction).State = EntityState.Modified;
 
         try
@@ -76,7 +82,12 @@ public class TransactionController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<Transaction>> PostTransaction(Transaction transaction)
     {
-        _context.SetTenantId(_tenantProvider.GetTenantId());
+        var tenantId = _tenantProvider.GetTenantId();
+        _context.SetTenantId(tenantId);
+        
+        // Ensure the transaction has the correct tenant ID
+        transaction.TenantId = tenantId;
+        
         _context.Transactions.Add(transaction);
         await _context.SaveChangesAsync();
 
@@ -88,7 +99,8 @@ public class TransactionController : ControllerBase
     public async Task<IActionResult> DeleteTransaction(string? id)
     {
         _context.SetTenantId(_tenantProvider.GetTenantId());
-        var transaction = await _context.Transactions.FindAsync(id);
+        var transaction = await _context.Transactions
+            .FirstOrDefaultAsync(t => t.Id == id);
         if (transaction == null)
         {
             return NotFound();

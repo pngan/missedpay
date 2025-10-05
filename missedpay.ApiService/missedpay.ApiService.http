@@ -23,7 +23,7 @@ X-Tenant-Id: {{TenantId}}
 ###
 
 ### GET - Get account by ID
-GET {{ApiService_HostAddress}}/api/Account/acc_123456789
+GET {{ApiService_HostAddress}}/api/Account/acc_test123
 Accept: application/json
 X-Tenant-Id: {{TenantId}}
 
@@ -41,18 +41,18 @@ X-Tenant-Id: {{TenantId}}
     "name": "Test Bank",
     "logo": "https://example.com/logo.png",
     "_id": "conn_test123",
-    "connection_type": "classic"
+    "connection_type": "Classic"
   },
   "name": "Test Checking Account",
-  "status": "ACTIVE",
+  "status": "Active",
   "formatted_account": "12-3456-7890123-00",
   "balance": {
     "current": 1500.50,
     "available": 1400.00,
     "currency": "NZD"
   },
-  "type": "CHECKING",
-  "attributes": ["TRANSACTIONS", "PAYMENT_FROM"]
+  "type": "Checking",
+  "attributes": ["Transactions", "PaymentFrom"]
 }
 
 ###
@@ -69,18 +69,18 @@ X-Tenant-Id: {{TenantId}}
     "name": "Test Bank",
     "logo": "https://example.com/logo.png",
     "_id": "conn_test123",
-    "connection_type": "classic"
+    "connection_type": "Classic"
   },
   "name": "Updated Test Account",
-  "status": "ACTIVE",
+  "status": "Active",
   "formatted_account": "12-3456-7890123-00",
   "balance": {
     "current": 2000.00,
     "available": 1900.00,
     "currency": "NZD"
   },
-  "type": "CHECKING",
-  "attributes": ["TRANSACTIONS", "PAYMENT_FROM"]
+  "type": "Checking",
+  "attributes": ["Transactions", "PaymentFrom"]
 }
 
 ###
@@ -123,7 +123,7 @@ X-Tenant-Id: {{TenantId}}
   "description": "Test Payment",
   "amount": -50.00,
   "balance": 1450.50,
-  "type": "PAYMENT"
+  "type": "Payment"
 }
 
 ###
@@ -142,7 +142,7 @@ X-Tenant-Id: {{TenantId}}
   "description": "Coffee Shop Purchase",
   "amount": -5.50,
   "balance": 1445.00,
-  "type": "EFTPOS",
+  "type": "Eftpos",
   "category": {
     "_id": "nzfcc_cafe123",
     "name": "Cafes & Restaurants"
@@ -176,7 +176,7 @@ X-Tenant-Id: {{TenantId}}
   "description": "Updated Test Payment",
   "amount": -55.00,
   "balance": 1445.50,
-  "type": "PAYMENT"
+  "type": "Payment"
 }
 
 ###
