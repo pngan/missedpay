@@ -1,6 +1,11 @@
 @ApiService_HostAddress = http://localhost:5349
 @TenantId = 01927b5e-8f3a-7000-8000-000000000000
 
+# Akahu API Tokens (loaded from .env file)
+# Note: These tokens are sensitive and should be stored in .env file
+@AkahuUserToken = {{$dotenv AKAHU_USER_TOKEN}}
+@AkahuAppToken = {{$dotenv AKAHU_APP_TOKEN}}
+
 ### Health Check
 GET {{ApiService_HostAddress}}/health
 Accept: application/json
@@ -246,3 +251,23 @@ Accept: application/json
 X-Tenant-Id: {{TenantId}}
 
 ###
+
+
+# =========================
+# Akahu Endpoints
+# =========================
+
+###
+GET https://api.akahu.io/v1/me
+Authorization: Bearer {{AkahuUserToken}}
+X-Akahu-Id: {{AkahuAppToken}}
+
+###
+GET https://api.akahu.io/v1/accounts
+Authorization: Bearer {{AkahuUserToken}}
+X-Akahu-Id: {{AkahuAppToken}}
+
+###
+GET https://api.akahu.io/v1/transactions
+Authorization: Bearer {{AkahuUserToken}}
+X-Akahu-Id: {{AkahuAppToken}}
