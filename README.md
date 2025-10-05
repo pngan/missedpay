@@ -70,13 +70,21 @@ See `MULTI_TENANCY.md` for detailed documentation.
 
 ## Running the Application
 
-1. cd missedpay.AppHost
+1. Go the AppHost directory
+   ```bash
+   cd missedpay.AppHost
+   ```
 2. Set up your `.env` file (see above)
 3. Run with .NET Aspire:
    ```bash
-   dotnet run --project missedpay.AppHost
+   dotnet run
    ```
 
 ## Testing API Endpoints
 
-Use the `missedpay.ApiService.http` file with the VS Code REST Client extension. The file automatically loads tokens from your `.env` file.
+Use the `missedpay.ApiService.http` file with the VS Code REST Client extension. The file automatically loads tokens from your `.env` file. 
+
+The query to load Accounts and Transactions from Akahu is:
+```
+POST {{ApiService_HostAddress}}/api/Akahu/refresh-all
+```
