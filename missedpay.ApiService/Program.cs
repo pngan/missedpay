@@ -26,6 +26,15 @@ builder.Services.AddCors(options =>
     });
 });
 
+// Register AkahuService with HttpClient
+builder.Services.AddHttpClient<AkahuService>();
+
+// Load Akahu tokens from environment variables
+builder.Configuration["Akahu:UserToken"] = Environment.GetEnvironmentVariable("AKAHU_USER_TOKEN") 
+    ?? builder.Configuration["Akahu:UserToken"];
+builder.Configuration["Akahu:AppToken"] = Environment.GetEnvironmentVariable("AKAHU_APP_TOKEN") 
+    ?? builder.Configuration["Akahu:AppToken"];
+
 // Add services to the container.
 builder.Services.AddControllers()
     .AddJsonOptions(options =>

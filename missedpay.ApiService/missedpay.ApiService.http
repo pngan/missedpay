@@ -252,6 +252,31 @@ X-Tenant-Id: {{TenantId}}
 
 ###
 
+# =========================
+# Akahu Integration Endpoints
+# =========================
+
+### POST - Refresh Accounts from Akahu
+POST {{ApiService_HostAddress}}/api/Akahu/refresh-accounts
+Content-Type: application/json
+X-Tenant-Id: {{TenantId}}
+
+###
+
+### POST - Refresh Transactions from Akahu
+POST {{ApiService_HostAddress}}/api/Akahu/refresh-transactions
+Content-Type: application/json
+X-Tenant-Id: {{TenantId}}
+
+###
+
+### POST - Refresh All (Accounts + Transactions) from Akahu
+POST {{ApiService_HostAddress}}/api/Akahu/refresh-all
+Content-Type: application/json
+X-Tenant-Id: {{TenantId}}
+
+###
+
 
 # =========================
 # Akahu Endpoints
