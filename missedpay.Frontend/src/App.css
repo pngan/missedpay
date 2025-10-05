@@ -1,42 +1,348 @@
-#root {
-  max-width: 1280px;
-  margin: 0 auto;
+* {#root {
+
+  box-sizing: border-box;  max-width: 1280px;
+
+}  margin: 0 auto;
+
   padding: 2rem;
-  text-align: center;
-}
 
-.logo {
+.app {  text-align: center;
+
+  min-height: 100vh;}
+
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+
+}.logo {
+
   height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
+
+.app-header {  padding: 1.5em;
+
+  background: white;  will-change: filter;
+
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);  transition: filter 300ms;
+
+  position: sticky;}
+
+  top: 0;.logo:hover {
+
+  z-index: 100;  filter: drop-shadow(0 0 2em #646cffaa);
+
+  backdrop-filter: blur(10px);}
+
+}.logo.react:hover {
+
   filter: drop-shadow(0 0 2em #61dafbaa);
+
+.header-content {}
+
+  max-width: 1400px;
+
+  margin: 0 auto;@keyframes logo-spin {
+
+  padding: 20px 24px;  from {
+
+  display: flex;    transform: rotate(0deg);
+
+  justify-content: space-between;  }
+
+  align-items: center;  to {
+
+}    transform: rotate(360deg);
+
+  }
+
+.app-title {}
+
+  margin: 0;
+
+  font-size: 28px;@media (prefers-reduced-motion: no-preference) {
+
+  font-weight: 800;  a:nth-of-type(2) .logo {
+
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);    animation: logo-spin infinite 20s linear;
+
+  -webkit-background-clip: text;  }
+
+  -webkit-text-fill-color: transparent;}
+
+  background-clip: text;
+
+  display: flex;.card {
+
+  align-items: center;  padding: 2em;
+
+  gap: 12px;}
+
 }
 
-@keyframes logo-spin {
+.read-the-docs {
+
+.title-icon {  color: #888;
+
+  font-size: 32px;}
+
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+}
+
+.refresh-button {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+  border-radius: 12px;
+  padding: 12px 16px;
+  font-size: 20px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+}
+
+.refresh-button:hover {
+  transform: rotate(180deg) scale(1.1);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.refresh-button:active {
+  transform: rotate(180deg) scale(0.95);
+}
+
+.app-main {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 32px 24px;
+}
+
+.content-container {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 32px;
+}
+
+.accounts-section {
+  animation: fadeIn 0.5s ease;
+}
+
+@keyframes fadeIn {
   from {
-    transform: rotate(0deg);
+    opacity: 0;
+    transform: translateY(20px);
   }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+
+.section-header h2 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+.account-count {
+  background: white;
+  color: #667eea;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 600;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+}
+
+.accounts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 20px;
+}
+
+.transactions-section {
+  animation: slideIn 0.4s ease;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Loading State */
+.app-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  gap: 20px;
+}
+
+.loader {
+  width: 64px;
+  height: 64px;
+  border: 6px solid rgba(102, 126, 234, 0.2);
+  border-top-color: #667eea;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
   to {
     transform: rotate(360deg);
   }
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
+.app-loading p {
+  font-size: 18px;
+  color: #666;
+  margin: 0;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
   }
 }
 
-.card {
-  padding: 2em;
+/* Error State */
+.app-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  padding: 20px;
+  text-align: center;
 }
 
-.read-the-docs {
-  color: #888;
+.error-icon {
+  font-size: 64px;
+  margin-bottom: 16px;
+}
+
+.app-error h2 {
+  margin: 0 0 12px 0;
+  font-size: 28px;
+  color: #1a1a1a;
+}
+
+.app-error p {
+  margin: 0 0 24px 0;
+  font-size: 16px;
+  color: #666;
+  max-width: 500px;
+}
+
+.retry-button {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 12px 32px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.retry-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+}
+
+.retry-button:active {
+  transform: translateY(0);
+}
+
+/* Empty State */
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.empty-icon {
+  font-size: 64px;
+  margin-bottom: 16px;
+}
+
+.empty-state h3 {
+  margin: 0 0 8px 0;
+  font-size: 20px;
+  color: #333;
+}
+
+.empty-state p {
+  margin: 0;
+  font-size: 14px;
+  color: #999;
+}
+
+/* Responsive Design */
+@media (min-width: 1024px) {
+  .content-container {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .accounts-section {
+    grid-column: 1;
+  }
+
+  .transactions-section {
+    grid-column: 2;
+    position: sticky;
+    top: 100px;
+    align-self: start;
+  }
+}
+
+@media (max-width: 768px) {
+  .app-main {
+    padding: 20px 16px;
+  }
+
+  .header-content {
+    padding: 16px;
+  }
+
+  .app-title {
+    font-size: 24px;
+  }
+
+  .accounts-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .section-header h2 {
+    font-size: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .app-title {
+    font-size: 20px;
+  }
+
+  .title-icon {
+    font-size: 24px;
+  }
 }

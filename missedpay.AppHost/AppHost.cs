@@ -10,4 +10,9 @@ var apiService = builder.AddProject<Projects.missedpay_ApiService>("apiservice")
     .WaitFor(postgres)
     .WithHttpHealthCheck("/health");
 
+builder.AddViteApp(name: "frontend", workingDirectory: "../missedpay.Frontend")
+    .WithReference(apiService)
+    .WaitFor(apiService)
+    .WithNpmPackageInstallation();
+
 builder.Build().Run();

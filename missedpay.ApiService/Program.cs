@@ -15,6 +15,17 @@ builder.Services.AddTenantProvider(builder.Configuration);
 // DbContext pooling is enabled (works because ITenantProvider is not in constructor)
 builder.AddNpgsqlDbContext<MissedPayDbContext>("missedpaydb");
 
+// Add CORS policy
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend", policy =>
+    {
+        policy.AllowAnyOrigin()
+              .AllowAnyMethod()
+              .AllowAnyHeader();
+    });
+});
+
 // Add services to the container.
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
@@ -184,6 +195,9 @@ using (var scope = app.Services.CreateScope())
 
 // Configure the HTTP request pipeline.
 app.UseExceptionHandler();
+
+// Enable CORS
+app.UseCors("AllowFrontend");
 
 if (app.Environment.IsDevelopment())
 {
