@@ -1,21 +1,26 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using missedpay.ApiService.Models;
+using missedpay.ApiService.Services;
 
 [Route("api/[controller]")]
 [ApiController]
 public class TransactionController : ControllerBase
 {
     private readonly MissedPayDbContext _context;
-    public TransactionController(MissedPayDbContext context)
+    private readonly ITenantProvider _tenantProvider;
+    
+    public TransactionController(MissedPayDbContext context, ITenantProvider tenantProvider)
     {
         _context = context;
+        _tenantProvider = tenantProvider;
     }
 
     // GET: api/Transaction
     [HttpGet]
     public async Task<ActionResult<IEnumerable<Transaction>>> GetTransaction()
     {
+        _context.SetTenantId(_tenantProvider.GetTenantId());
         return await _context.Transactions.ToListAsync();
     }
 
@@ -23,6 +28,7 @@ public class TransactionController : ControllerBase
     [HttpGet("{id}")]
     public async Task<ActionResult<Transaction>> GetTransaction(string id)
     {
+        _context.SetTenantId(_tenantProvider.GetTenantId());
         var transaction = await _context.Transactions.FindAsync(id);
 
         if (transaction == null)
@@ -43,6 +49,7 @@ public class TransactionController : ControllerBase
             return BadRequest();
         }
 
+        _context.SetTenantId(_tenantProvider.GetTenantId());
         _context.Entry(transaction).State = EntityState.Modified;
 
         try
@@ -69,6 +76,7 @@ public class TransactionController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<Transaction>> PostTransaction(Transaction transaction)
     {
+        _context.SetTenantId(_tenantProvider.GetTenantId());
         _context.Transactions.Add(transaction);
         await _context.SaveChangesAsync();
 
@@ -79,6 +87,7 @@ public class TransactionController : ControllerBase
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteTransaction(string? id)
     {
+        _context.SetTenantId(_tenantProvider.GetTenantId());
         var transaction = await _context.Transactions.FindAsync(id);
         if (transaction == null)
         {
@@ -93,6 +102,7 @@ public class TransactionController : ControllerBase
 
     private bool TransactionExists(string? id)
     {
+        _context.SetTenantId(_tenantProvider.GetTenantId());
         return _context.Transactions.Any(e => e.Id == id);
     }
 }

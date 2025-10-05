@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace missedpay.ApiService.Models;
 
-public class Account
+public class Account : BaseEntity
 {
     [JsonPropertyName("_id")]
     public string Id { get; set; } = string.Empty;

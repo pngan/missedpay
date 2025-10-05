@@ -1,15 +1,26 @@
 using Microsoft.EntityFrameworkCore;
+using missedpay.ApiService.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add service defaults & Aspire client integrations.
 builder.AddServiceDefaults();
 
+// Register tenant provider based on configuration
+// Development: Uses hard-coded tenant ID
+// Production: Can use Header or JWT based on appsettings.json
+builder.Services.AddTenantProvider(builder.Configuration);
+
 // Add PostgreSQL with Aspire - this will automatically use the connection string from Aspire
+// DbContext pooling is enabled (works because ITenantProvider is not in constructor)
 builder.AddNpgsqlDbContext<MissedPayDbContext>("missedpaydb");
 
 // Add services to the container.
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
+    });
 builder.Services.AddProblemDetails();
 
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
@@ -22,6 +33,9 @@ using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<MissedPayDbContext>();
     var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+    
+    // Set a default tenant ID for migration operations
+    dbContext.SetTenantId(Guid.Parse("01927b5e-8f3a-7000-8000-000000000000"));
     
     var retryCount = 0;
     var maxRetries = 20;

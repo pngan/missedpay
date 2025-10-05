@@ -1,4 +1,5 @@
 @ApiService_HostAddress = http://localhost:5349
+@TenantId = 01927b5e-8f3a-7000-8000-000000000000
 
 ### Health Check
 GET {{ApiService_HostAddress}}/health
@@ -17,18 +18,21 @@ Accept: application/json
 ### GET - Get all accounts
 GET {{ApiService_HostAddress}}/api/Account
 Accept: application/json
+X-Tenant-Id: {{TenantId}}
 
 ###
 
 ### GET - Get account by ID
 GET {{ApiService_HostAddress}}/api/Account/acc_123456789
 Accept: application/json
+X-Tenant-Id: {{TenantId}}
 
 ###
 
 ### POST - Create a new account
 POST {{ApiService_HostAddress}}/api/Account
 Content-Type: application/json
+X-Tenant-Id: {{TenantId}}
 
 {
   "_id": "acc_test123",
@@ -56,6 +60,7 @@ Content-Type: application/json
 ### PUT - Update an account
 PUT {{ApiService_HostAddress}}/api/Account/acc_test123
 Content-Type: application/json
+X-Tenant-Id: {{TenantId}}
 
 {
   "_id": "acc_test123",
@@ -82,6 +87,7 @@ Content-Type: application/json
 
 ### DELETE - Delete an account
 DELETE {{ApiService_HostAddress}}/api/Account/acc_test123
+X-Tenant-Id: {{TenantId}}
 
 ###
 
@@ -92,18 +98,21 @@ DELETE {{ApiService_HostAddress}}/api/Account/acc_test123
 ### GET - Get all transactions
 GET {{ApiService_HostAddress}}/api/Transaction
 Accept: application/json
+X-Tenant-Id: {{TenantId}}
 
 ###
 
 ### GET - Get transaction by ID
 GET {{ApiService_HostAddress}}/api/Transaction/trans_123456789
 Accept: application/json
+X-Tenant-Id: {{TenantId}}
 
 ###
 
 ### POST - Create a new transaction
 POST {{ApiService_HostAddress}}/api/Transaction
 Content-Type: application/json
+X-Tenant-Id: {{TenantId}}
 
 {
   "_id": "trans_test123",
@@ -122,6 +131,7 @@ Content-Type: application/json
 ### POST - Create transaction with enrichment data
 POST {{ApiService_HostAddress}}/api/Transaction
 Content-Type: application/json
+X-Tenant-Id: {{TenantId}}
 
 {
   "_id": "trans_test456",
@@ -155,6 +165,7 @@ Content-Type: application/json
 ### PUT - Update a transaction
 PUT {{ApiService_HostAddress}}/api/Transaction/trans_test123
 Content-Type: application/json
+X-Tenant-Id: {{TenantId}}
 
 {
   "_id": "trans_test123",
@@ -172,6 +183,7 @@ Content-Type: application/json
 
 ### DELETE - Delete a transaction
 DELETE {{ApiService_HostAddress}}/api/Transaction/trans_test123
+X-Tenant-Id: {{TenantId}}
 
 ###
 
@@ -182,23 +194,27 @@ DELETE {{ApiService_HostAddress}}/api/Transaction/trans_test123
 ### GET - Database Statistics
 GET {{ApiService_HostAddress}}/api/Admin/stats
 Accept: application/json
+X-Tenant-Id: {{TenantId}}
 
 ###
 
 ### DELETE - Clear All Data (USE WITH CAUTION!)
 DELETE {{ApiService_HostAddress}}/api/Admin/clear-all-data
 Accept: application/json
+X-Tenant-Id: {{TenantId}}
 
 ###
 
 ### DELETE - Clear All Transactions Only
 DELETE {{ApiService_HostAddress}}/api/Admin/clear-transactions
 Accept: application/json
+X-Tenant-Id: {{TenantId}}
 
 ###
 
 ### DELETE - Clear All Accounts (and related transactions)
 DELETE {{ApiService_HostAddress}}/api/Admin/clear-accounts
 Accept: application/json
+X-Tenant-Id: {{TenantId}}
 
 ###
