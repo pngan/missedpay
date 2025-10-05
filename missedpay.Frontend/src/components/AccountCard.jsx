@@ -1,39 +1,129 @@
-const AccountCard = ({ account, isSelected, onClick }) => {
+const AccountCard = ({ account, isSelected, onClick, transactionCount = 0 }) => {
   const formatCurrency = (amount, currency = 'NZD') => {
-    return new Intl.NumberFormat('en-NZ', {
+    return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: currency,
     }).format(amount);
   };
 
+  const getAccountIcon = (type) => {
+    if (type === 'Savings' || account.name.toLowerCase().includes('savings')) {
+      return '🏦';
+    }
+    return '💳';
+  };
+
+  const formatAccountNumber = (formatted) => {
+    if (!formatted) return '';
+    // Convert "12-3456-7890123-00" to "****6789"
+    const parts = formatted.split('-');
+    if (parts.length >= 3) {
+      const accountPart = parts[2];
+      return `****${accountPart.slice(-4)}`;
+    }
+    return formatted;
+  };
+
   return (
-    <li 
+    <div 
       onClick={() => onClick(account)}
-      style={{ cursor: 'pointer', marginBottom: '10px', border: isSelected ? '2px solid blue' : '1px solid gray', padding: '10px' }}
+      style={{ 
+        cursor: 'pointer',
+        backgroundColor: '#fff',
+        border: '1px solid #e5e7eb',
+        borderRadius: '12px',
+        padding: '20px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        transition: 'all 0.2s ease',
+        boxShadow: isSelected ? '0 4px 12px rgba(0, 0, 0, 0.1)' : '0 1px 3px rgba(0, 0, 0, 0.05)',
+        transform: isSelected ? 'translateY(-2px)' : 'none',
+        borderColor: isSelected ? '#3b82f6' : '#e5e7eb'
+      }}
+      onMouseEnter={(e) => {
+        if (!isSelected) {
+          e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.08)';
+        }
+      }}
+      onMouseLeave={(e) => {
+        if (!isSelected) {
+          e.currentTarget.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.05)';
+        }
+      }}
     >
-      <div>
-        <span style={{ fontWeight: 'bold' }}>{account.name}</span>
-        {' - '}
-        <span>{account.connection.name}</span>
-        {' '}
-        <span>[{account.status}]</span>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flex: 1 }}>
+        <div style={{
+          width: '48px',
+          height: '48px',
+          backgroundColor: '#f3f4f6',
+          borderRadius: '8px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontSize: '24px',
+          flexShrink: 0
+        }}>
+          {getAccountIcon(account.type)}
+        </div>
+        
+        <div style={{ flex: 1 }}>
+          <div style={{ marginBottom: '4px' }}>
+            <span style={{ 
+              fontSize: '16px',
+              fontWeight: '600',
+              color: '#111',
+              marginRight: '8px'
+            }}>
+              {account.name}
+            </span>
+            <span style={{ 
+              fontSize: '14px',
+              color: '#6b7280'
+            }}>
+              {formatAccountNumber(account.formattedAccount)}
+            </span>
+          </div>
+          <div style={{ 
+            fontSize: '14px',
+            color: '#9ca3af'
+          }}>
+            {account.type}
+          </div>
+        </div>
       </div>
-      
-      {account.formattedAccount && (
-        <div><span>{account.formattedAccount}</span></div>
-      )}
-      
-      <div>
-        <span>Current: {formatCurrency(account.balance.current, account.balance.currency)}</span>
-        {account.balance.available !== null && account.balance.available !== undefined && (
-          <span> | Available: {formatCurrency(account.balance.available, account.balance.currency)}</span>
-        )}
+
+      <div style={{ 
+        display: 'flex',
+        alignItems: 'center',
+        gap: '16px',
+        flexShrink: 0
+      }}>
+        <div style={{ textAlign: 'right' }}>
+          <div style={{ 
+            fontSize: '18px',
+            fontWeight: '600',
+            color: '#111',
+            marginBottom: '2px'
+          }}>
+            {formatCurrency(account.balance.current, account.balance.currency)}
+          </div>
+          <div style={{ 
+            fontSize: '13px',
+            color: '#6b7280'
+          }}>
+            {transactionCount} transaction{transactionCount !== 1 ? 's' : ''}
+          </div>
+        </div>
+        
+        <div style={{
+          fontSize: '18px',
+          color: '#9ca3af'
+        }}>
+          ›
+        </div>
       </div>
-      
-      <div>
-        <span>Type: {account.type}</span>
-      </div>
-    </li>
+    </div>
   );
 };
 
