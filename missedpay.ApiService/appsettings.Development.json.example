@@ -10,5 +10,9 @@
   "TenantProvider": {
     "Type": "Header",
     "Description": "Using X-Tenant-Id header for production-like multi-tenant behavior"
+  },
+  "Akahu": {
+    "UserToken": "your_user_token_here",
+    "AppToken": "your_app_token_here"
   }
 }

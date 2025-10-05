@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using missedpay.ApiService.Models;
 using missedpay.ApiService.Services;
 
@@ -7,12 +6,12 @@ using missedpay.ApiService.Services;
 [ApiController]
 public class AccountController : ControllerBase
 {
-    private readonly MissedPayDbContext _context;
+    private readonly IAccountService _accountService;
     private readonly ITenantProvider _tenantProvider;
     
-    public AccountController(MissedPayDbContext context, ITenantProvider tenantProvider)
+    public AccountController(IAccountService accountService, ITenantProvider tenantProvider)
     {
-        _context = context;
+        _accountService = accountService;
         _tenantProvider = tenantProvider;
     }
 
@@ -20,17 +19,17 @@ public class AccountController : ControllerBase
     [HttpGet]
     public async Task<ActionResult<IEnumerable<Account>>> GetAccount()
     {
-        _context.SetTenantId(_tenantProvider.GetTenantId());
-        return await _context.Accounts.ToListAsync();
+        var tenantId = _tenantProvider.GetTenantId();
+        var accounts = await _accountService.GetAllAccountsAsync(tenantId);
+        return Ok(accounts);
     }
 
     // GET: api/Account/5
     [HttpGet("{id}")]
     public async Task<ActionResult<Account>> GetAccount(string id)
     {
-        _context.SetTenantId(_tenantProvider.GetTenantId());
-        var account = await _context.Accounts
-            .FirstOrDefaultAsync(a => a.Id == id);
+        var tenantId = _tenantProvider.GetTenantId();
+        var account = await _accountService.GetAccountByIdAsync(id, tenantId);
 
         if (account == null)
         {
@@ -51,27 +50,11 @@ public class AccountController : ControllerBase
         }
 
         var tenantId = _tenantProvider.GetTenantId();
-        _context.SetTenantId(tenantId);
-        
-        // Ensure the account maintains the correct tenant ID (prevent tenant switching)
-        account.TenantId = tenantId;
-        
-        _context.Entry(account).State = EntityState.Modified;
+        var updatedAccount = await _accountService.UpdateAccountAsync(id, account, tenantId);
 
-        try
+        if (updatedAccount == null)
         {
-            await _context.SaveChangesAsync();
-        }
-        catch (DbUpdateConcurrencyException)
-        {
-            if (!AccountExists(id))
-            {
-                return NotFound();
-            }
-            else
-            {
-                throw;
-            }
+            return NotFound();
         }
 
         return NoContent();
@@ -83,38 +66,23 @@ public class AccountController : ControllerBase
     public async Task<ActionResult<Account>> PostAccount(Account account)
     {
         var tenantId = _tenantProvider.GetTenantId();
-        _context.SetTenantId(tenantId);
-        
-        // Ensure the account has the correct tenant ID
-        account.TenantId = tenantId;
-        
-        _context.Accounts.Add(account);
-        await _context.SaveChangesAsync();
+        var createdAccount = await _accountService.CreateAccountAsync(account, tenantId);
 
-        return CreatedAtAction("GetAccount", new { id = account.Id }, account);
+        return CreatedAtAction("GetAccount", new { id = createdAccount.Id }, createdAccount);
     }
 
     // DELETE: api/Account/5
     [HttpDelete("{id}")]
-    public async Task<IActionResult> DeleteAccount(string? id)
+    public async Task<IActionResult> DeleteAccount(string id)
     {
-        _context.SetTenantId(_tenantProvider.GetTenantId());
-        var account = await _context.Accounts
-            .FirstOrDefaultAsync(a => a.Id == id);
-        if (account == null)
+        var tenantId = _tenantProvider.GetTenantId();
+        var deleted = await _accountService.DeleteAccountAsync(id, tenantId);
+        
+        if (!deleted)
         {
             return NotFound();
         }
 
-        _context.Accounts.Remove(account);
-        await _context.SaveChangesAsync();
-
         return NoContent();
-    }
-
-    private bool AccountExists(string? id)
-    {
-        _context.SetTenantId(_tenantProvider.GetTenantId());
-        return _context.Accounts.Any(e => e.Id == id);
     }
 }

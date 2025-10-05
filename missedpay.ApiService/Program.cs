@@ -29,6 +29,10 @@ builder.Services.AddCors(options =>
 // Register AkahuService with HttpClient
 builder.Services.AddHttpClient<AkahuService>();
 
+// Register application services
+builder.Services.AddScoped<IAccountService, AccountService>();
+builder.Services.AddScoped<ITransactionService, TransactionService>();
+
 // Load Akahu tokens from environment variables
 builder.Configuration["Akahu:UserToken"] = Environment.GetEnvironmentVariable("AKAHU_USER_TOKEN") 
     ?? builder.Configuration["Akahu:UserToken"];

@@ -6,7 +6,9 @@ A multi-tenant financial management application built with .NET Aspire, PostgreS
 
 ### Environment Variables
 
-This project uses environment variables to store sensitive API credentials. To set up:
+This project uses multiple methods to store sensitive API credentials:
+
+#### Option 1: Environment Variables (.env file)
 
 1. Copy `.env.example` to `.env`:
    ```bash
@@ -20,6 +22,27 @@ This project uses environment variables to store sensitive API credentials. To s
    ```
 
 3. **Important**: The `.env` file is already in `.gitignore` and will not be committed to version control.
+
+#### Option 2: appsettings.Development.json (Recommended for local development)
+
+1. Copy `missedpay.ApiService/appsettings.Development.json.example` to `appsettings.Development.json`:
+   ```bash
+   cp missedpay.ApiService/appsettings.Development.json.example missedpay.ApiService/appsettings.Development.json
+   ```
+
+2. Edit `appsettings.Development.json` and add your actual tokens in the `Akahu` section:
+   ```json
+   {
+     "Akahu": {
+       "UserToken": "your_actual_user_token",
+       "AppToken": "your_actual_app_token"
+     }
+   }
+   ```
+
+3. **Important**: `appsettings.Development.json` is in `.gitignore` and will not be committed.
+
+**Note**: Environment variables take precedence over appsettings.json values.
 
 ### Getting Akahu API Tokens
 

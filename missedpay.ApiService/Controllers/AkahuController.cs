@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using missedpay.ApiService.Models;
 using missedpay.ApiService.Services;
 
@@ -9,18 +8,21 @@ namespace missedpay.ApiService.Controllers;
 [ApiController]
 public class AkahuController : ControllerBase
 {
-    private readonly MissedPayDbContext _context;
+    private readonly IAccountService _accountService;
+    private readonly ITransactionService _transactionService;
     private readonly ITenantProvider _tenantProvider;
     private readonly AkahuService _akahuService;
     private readonly ILogger<AkahuController> _logger;
 
     public AkahuController(
-        MissedPayDbContext context, 
+        IAccountService accountService,
+        ITransactionService transactionService,
         ITenantProvider tenantProvider,
         AkahuService akahuService,
         ILogger<AkahuController> logger)
     {
-        _context = context;
+        _accountService = accountService;
+        _transactionService = transactionService;
         _tenantProvider = tenantProvider;
         _akahuService = akahuService;
         _logger = logger;
@@ -36,8 +38,6 @@ public class AkahuController : ControllerBase
         try
         {
             var tenantId = _tenantProvider.GetTenantId();
-            _context.SetTenantId(tenantId);
-
             _logger.LogInformation($"Refreshing accounts for tenant {tenantId}");
 
             // Get accounts from Akahu
@@ -54,44 +54,8 @@ public class AkahuController : ControllerBase
                 });
             }
 
-            int created = 0;
-            int updated = 0;
-
-            foreach (var akahuAccount in akahuAccounts)
-            {
-                // Set tenant ID
-                akahuAccount.TenantId = tenantId;
-
-                // Check if account already exists
-                var existingAccount = await _context.Accounts
-                    .FirstOrDefaultAsync(a => a.Id == akahuAccount.Id);
-
-                if (existingAccount == null)
-                {
-                    // Create new account
-                    _context.Accounts.Add(akahuAccount);
-                    created++;
-                    _logger.LogInformation($"Creating new account: {akahuAccount.Id} - {akahuAccount.Name}");
-                }
-                else
-                {
-                    // Update existing account
-                    existingAccount.Name = akahuAccount.Name;
-                    existingAccount.Status = akahuAccount.Status;
-                    existingAccount.FormattedAccount = akahuAccount.FormattedAccount;
-                    existingAccount.Balance = akahuAccount.Balance;
-                    existingAccount.Type = akahuAccount.Type;
-                    existingAccount.Attributes = akahuAccount.Attributes;
-                    existingAccount.Connection = akahuAccount.Connection;
-                    existingAccount.TenantId = tenantId; // Ensure tenant doesn't change
-                    
-                    _context.Entry(existingAccount).State = EntityState.Modified;
-                    updated++;
-                    _logger.LogInformation($"Updating existing account: {akahuAccount.Id} - {akahuAccount.Name}");
-                }
-            }
-
-            await _context.SaveChangesAsync();
+            // Use service to upsert accounts
+            var (created, updated) = await _accountService.UpsertAccountsAsync(akahuAccounts, tenantId);
 
             return Ok(new RefreshAccountsResponse
             {
@@ -123,8 +87,6 @@ public class AkahuController : ControllerBase
         try
         {
             var tenantId = _tenantProvider.GetTenantId();
-            _context.SetTenantId(tenantId);
-
             _logger.LogInformation($"Refreshing transactions for tenant {tenantId}");
 
             // Get transactions from Akahu
@@ -141,54 +103,8 @@ public class AkahuController : ControllerBase
                 });
             }
 
-            int created = 0;
-            int updated = 0;
-            int skipped = 0;
-
-            foreach (var akahuTransaction in akahuTransactions)
-            {
-                // Set tenant ID
-                akahuTransaction.TenantId = tenantId;
-
-                // Verify the account exists for this tenant
-                var accountExists = await _context.Accounts
-                    .AnyAsync(a => a.Id == akahuTransaction.Account);
-
-                if (!accountExists)
-                {
-                    _logger.LogWarning($"Skipping transaction {akahuTransaction.Id} - Account {akahuTransaction.Account} not found");
-                    skipped++;
-                    continue;
-                }
-
-                // Check if transaction already exists
-                var existingTransaction = await _context.Transactions
-                    .FirstOrDefaultAsync(t => t.Id == akahuTransaction.Id);
-
-                if (existingTransaction == null)
-                {
-                    // Create new transaction
-                    _context.Transactions.Add(akahuTransaction);
-                    created++;
-                }
-                else
-                {
-                    // Update existing transaction
-                    existingTransaction.Description = akahuTransaction.Description;
-                    existingTransaction.Amount = akahuTransaction.Amount;
-                    existingTransaction.Balance = akahuTransaction.Balance;
-                    existingTransaction.Type = akahuTransaction.Type;
-                    existingTransaction.Category = akahuTransaction.Category;
-                    existingTransaction.Merchant = akahuTransaction.Merchant;
-                    existingTransaction.Meta = akahuTransaction.Meta;
-                    existingTransaction.TenantId = tenantId; // Ensure tenant doesn't change
-                    
-                    _context.Entry(existingTransaction).State = EntityState.Modified;
-                    updated++;
-                }
-            }
-
-            await _context.SaveChangesAsync();
+            // Use service to upsert transactions
+            var (created, updated, skipped) = await _transactionService.UpsertTransactionsAsync(akahuTransactions, tenantId);
 
             return Ok(new RefreshTransactionsResponse
             {
