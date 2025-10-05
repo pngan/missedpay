@@ -103,7 +103,7 @@ X-Tenant-Id: {{TenantId}}
 ###
 
 ### GET - Get transaction by ID
-GET {{ApiService_HostAddress}}/api/Transaction/trans_123456789
+GET {{ApiService_HostAddress}}/api/Transaction/trans_test123
 Accept: application/json
 X-Tenant-Id: {{TenantId}}
 
