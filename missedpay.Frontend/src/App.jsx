@@ -41,9 +41,9 @@ function App() {
   };
 
   const formatCurrency = (amount, currency = 'NZD') => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: currency,
+    return '$' + new Intl.NumberFormat('en-US', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
     }).format(amount);
   };
 

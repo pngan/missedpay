@@ -1,8 +1,8 @@
 const AccountCard = ({ account, isSelected, onClick, transactionCount = 0 }) => {
   const formatCurrency = (amount, currency = 'NZD') => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: currency,
+    return '$' + new Intl.NumberFormat('en-US', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
     }).format(amount);
   };
 
