@@ -24,35 +24,147 @@ using (var scope = app.Services.CreateScope())
     var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
     
     var retryCount = 0;
-    var maxRetries = 15;
-    var delay = TimeSpan.FromSeconds(3);
+    var maxRetries = 20;
+    var delay = TimeSpan.FromSeconds(2);
+    var migrationApplied = false;
     
-    while (retryCount < maxRetries)
+    while (retryCount < maxRetries && !migrationApplied)
     {
+        retryCount++;
+        
         try
         {
-            logger.LogInformation("Attempting to apply database migrations (attempt {Attempt}/{MaxRetries})...", retryCount + 1, maxRetries);
+            logger.LogInformation("Attempting to connect to database and apply migrations (attempt {Attempt}/{MaxRetries})...", retryCount, maxRetries);
             
-            // First, ensure we can connect to the database
-            await dbContext.Database.CanConnectAsync();
+            // First, test if we can connect to the database
+            var canConnect = await dbContext.Database.CanConnectAsync();
+            
+            if (!canConnect)
+            {
+                logger.LogWarning("Cannot connect to database yet. Waiting {Delay} seconds before retry...", delay.TotalSeconds);
+                await Task.Delay(delay);
+                continue;
+            }
+            
             logger.LogInformation("Database connection successful.");
             
-            // Then apply migrations
+            // Ensure the migrations history table exists before checking for pending migrations
+            logger.LogInformation("Ensuring migrations history table exists...");
+            await dbContext.Database.ExecuteSqlRawAsync(@"
+                CREATE TABLE IF NOT EXISTS ""__EFMigrationsHistory"" (
+                    ""MigrationId"" character varying(150) NOT NULL,
+                    ""ProductVersion"" character varying(32) NOT NULL,
+                    CONSTRAINT ""PK___EFMigrationsHistory"" PRIMARY KEY (""MigrationId"")
+                )");
+            
+            // Check for pending migrations
+            logger.LogInformation("Checking for pending migrations...");
+            var pendingMigrations = await dbContext.Database.GetPendingMigrationsAsync();
+            var pendingList = pendingMigrations.ToList();
+            
+            if (pendingList.Any())
+            {
+                logger.LogInformation("Found {Count} pending migration(s): {Migrations}", 
+                    pendingList.Count, 
+                    string.Join(", ", pendingList));
+            }
+            else
+            {
+                logger.LogInformation("No pending migrations found. Database is up to date.");
+            }
+            
+            // Apply migrations
+            logger.LogInformation("Applying migrations...");
             await dbContext.Database.MigrateAsync();
             logger.LogInformation("Database migrations applied successfully.");
-            break;
+            
+            // Verify tables exist
+            var accountCount = await dbContext.Accounts.CountAsync();
+            var transactionCount = await dbContext.Transactions.CountAsync();
+            logger.LogInformation("Database ready. Current counts - Accounts: {AccountCount}, Transactions: {TransactionCount}", 
+                accountCount, transactionCount);
+            
+            migrationApplied = true;
         }
-        catch (Exception ex) when (retryCount < maxRetries - 1)
+        catch (Npgsql.PostgresException pgEx) when (pgEx.SqlState == "42P07") // Table already exists
         {
-            retryCount++;
-            logger.LogWarning(ex, "Failed to apply migrations. Retrying in {Delay} seconds... (attempt {Attempt}/{MaxRetries})", delay.TotalSeconds, retryCount, maxRetries);
+            logger.LogWarning("Tables already exist (SqlState: 42P07). This may be from EnsureCreated or a partial migration. Marking migration as complete...");
+            
+            try
+            {
+                // Manually mark the migration as applied since tables already exist
+                await dbContext.Database.ExecuteSqlRawAsync(
+                    "INSERT INTO \"__EFMigrationsHistory\" (\"MigrationId\", \"ProductVersion\") VALUES ('20251004083835_MissedPayInitialCreate', '9.0.0') ON CONFLICT DO NOTHING");
+                
+                logger.LogInformation("Migration marked as complete. Verifying database...");
+                
+                // Verify tables exist
+                var accountCount = await dbContext.Accounts.CountAsync();
+                var transactionCount = await dbContext.Transactions.CountAsync();
+                logger.LogInformation("Database ready. Current counts - Accounts: {AccountCount}, Transactions: {TransactionCount}", 
+                    accountCount, transactionCount);
+                
+                migrationApplied = true;
+            }
+            catch (Exception markEx)
+            {
+                logger.LogError(markEx, "Failed to mark migration as complete. Will retry...");
+                
+                if (retryCount >= maxRetries)
+                {
+                    throw;
+                }
+                
+                await Task.Delay(delay);
+            }
+        }
+        catch (Npgsql.PostgresException pgEx) when (pgEx.SqlState == "42P01") // Undefined table
+        {
+            logger.LogWarning("Migration history table doesn't exist yet (attempt {Attempt}/{MaxRetries}). This is normal on first run. Retrying...", 
+                retryCount, maxRetries);
+            
+            if (retryCount >= maxRetries)
+            {
+                logger.LogError(pgEx, "Failed to apply database migrations after {MaxRetries} attempts.", maxRetries);
+                throw;
+            }
+            
+            await Task.Delay(delay);
+        }
+        catch (Npgsql.PostgresException pgEx)
+        {
+            logger.LogWarning(pgEx, "PostgreSQL error (attempt {Attempt}/{MaxRetries}): {Message} (SqlState: {SqlState}). Retrying in {Delay} seconds...", 
+                retryCount, maxRetries, pgEx.Message, pgEx.SqlState, delay.TotalSeconds);
+            
+            if (retryCount >= maxRetries)
+            {
+                logger.LogError(pgEx, "Failed to apply database migrations after {MaxRetries} attempts. PostgreSQL error: {SqlState}", 
+                    maxRetries, pgEx.SqlState);
+                throw;
+            }
+            
             await Task.Delay(delay);
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Failed to apply database migrations after {MaxRetries} attempts.", maxRetries);
-            throw;
+            logger.LogWarning(ex, "Error applying migrations (attempt {Attempt}/{MaxRetries}): {Message}. Retrying in {Delay} seconds...", 
+                retryCount, maxRetries, ex.Message, delay.TotalSeconds);
+            
+            if (retryCount >= maxRetries)
+            {
+                logger.LogError(ex, "Failed to apply database migrations after {MaxRetries} attempts.", maxRetries);
+                throw;
+            }
+            
+            await Task.Delay(delay);
         }
+    }
+    
+    if (!migrationApplied)
+    {
+        var errorMessage = $"Failed to apply database migrations after {maxRetries} attempts.";
+        logger.LogCritical(errorMessage);
+        throw new InvalidOperationException(errorMessage);
     }
 }
 
