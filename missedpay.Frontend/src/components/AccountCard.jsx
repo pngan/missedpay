@@ -1,5 +1,3 @@
-import './AccountCard.css';
-
 const AccountCard = ({ account, isSelected, onClick }) => {
   const formatCurrency = (amount, currency = 'NZD') => {
     return new Intl.NumberFormat('en-NZ', {
@@ -9,55 +7,33 @@ const AccountCard = ({ account, isSelected, onClick }) => {
   };
 
   return (
-    <div 
-      className={`account-card ${isSelected ? 'selected' : ''}`}
+    <li 
       onClick={() => onClick(account)}
+      style={{ cursor: 'pointer', marginBottom: '10px', border: isSelected ? '2px solid blue' : '1px solid gray', padding: '10px' }}
     >
-      <div className="account-header">
-        <div className="account-logo">
-          {account.connection.logo ? (
-            <img src={account.connection.logo} alt={account.connection.name} />
-          ) : (
-            <div className="account-logo-placeholder">
-              {account.connection.name.charAt(0)}
-            </div>
-          )}
-        </div>
-        <div className="account-info">
-          <h3 className="account-name">{account.name}</h3>
-          <p className="account-bank">{account.connection.name}</p>
-        </div>
-        <div className={`account-status ${account.status.toLowerCase()}`}>
-          {account.status}
-        </div>
+      <div>
+        <span style={{ fontWeight: 'bold' }}>{account.name}</span>
+        {' - '}
+        <span>{account.connection.name}</span>
+        {' '}
+        <span>[{account.status}]</span>
       </div>
       
-      <div className="account-details">
-        {account.formattedAccount && (
-          <p className="account-number">{account.formattedAccount}</p>
+      {account.formattedAccount && (
+        <div><span>{account.formattedAccount}</span></div>
+      )}
+      
+      <div>
+        <span>Current: {formatCurrency(account.balance.current, account.balance.currency)}</span>
+        {account.balance.available !== null && account.balance.available !== undefined && (
+          <span> | Available: {formatCurrency(account.balance.available, account.balance.currency)}</span>
         )}
-        <div className="account-balance">
-          <div className="balance-main">
-            <span className="balance-label">Current Balance</span>
-            <span className="balance-amount">
-              {formatCurrency(account.balance.current, account.balance.currency)}
-            </span>
-          </div>
-          {account.balance.available !== null && account.balance.available !== undefined && (
-            <div className="balance-available">
-              <span className="balance-label">Available</span>
-              <span className="balance-amount">
-                {formatCurrency(account.balance.available, account.balance.currency)}
-              </span>
-            </div>
-          )}
-        </div>
       </div>
-
-      <div className="account-type">
-        <span className="type-badge">{account.type}</span>
+      
+      <div>
+        <span>Type: {account.type}</span>
       </div>
-    </div>
+    </li>
   );
 };
 

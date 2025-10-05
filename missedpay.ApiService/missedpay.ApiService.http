@@ -57,6 +57,34 @@ X-Tenant-Id: {{TenantId}}
 
 ###
 
+### POST - Create a second account
+POST {{ApiService_HostAddress}}/api/Account
+Content-Type: application/json
+X-Tenant-Id: {{TenantId}}
+
+{
+  "_id": "acc_test456",
+  "_authorisation": "auth_test456",
+  "connection": {
+    "name": "Test Bank",
+    "logo": "https://example.com/logo.png",
+    "_id": "conn_test456",
+    "connection_type": "Classic"
+  },
+  "name": "Savings Account",
+  "status": "Active",
+  "formatted_account": "12-3456-7890456-30",
+  "balance": {
+    "current": 5000.00,
+    "available": 5000.00,
+    "currency": "NZD"
+  },
+  "type": "Checking",
+  "attributes": ["Transactions"]
+}
+
+###
+
 ### PUT - Update an account
 PUT {{ApiService_HostAddress}}/api/Account/acc_test123
 Content-Type: application/json

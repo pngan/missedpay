@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import AccountCard from './components/AccountCard';
 import TransactionList from './components/TransactionList';
 import { accountsApi, transactionsApi } from './services/api';
-import './App.css';
 
 function App() {
   const [accounts, setAccounts] = useState([]);
@@ -39,8 +38,7 @@ function App() {
 
   if (loading) {
     return (
-      <div className="app-loading">
-        <div className="loader"></div>
+      <div>
         <p>Loading your accounts...</p>
       </div>
     );
@@ -48,11 +46,10 @@ function App() {
 
   if (error) {
     return (
-      <div className="app-error">
-        <div className="error-icon">⚠️</div>
+      <div>
         <h2>Oops! Something went wrong</h2>
         <p>{error}</p>
-        <button onClick={loadData} className="retry-button">
+        <button onClick={loadData}>
           Try Again
         </button>
       </div>
@@ -60,56 +57,45 @@ function App() {
   }
 
   return (
-    <div className="app">
-      <header className="app-header">
-        <div className="header-content">
-          <h1 className="app-title">
-            <span className="title-icon">💰</span>
-            MissedPay
-          </h1>
-          <button onClick={loadData} className="refresh-button" title="Refresh">
-            🔄
-          </button>
-        </div>
+    <div>
+      <header>
+        <h1>MissedPay</h1>
+        <button onClick={loadData} title="Refresh">
+          Refresh
+        </button>
       </header>
 
-      <main className="app-main">
-        <div className="content-container">
-          <section className="accounts-section">
-            <div className="section-header">
-              <h2>Your Accounts</h2>
-              <span className="account-count">{accounts.length}</span>
-            </div>
+      <main>
+        <section>
+          <h2>Your Accounts ({accounts.length})</h2>
             
-            {accounts.length === 0 ? (
-              <div className="empty-state">
-                <div className="empty-icon">🏦</div>
-                <h3>No accounts found</h3>
-                <p>Add your first account to get started</p>
-              </div>
-            ) : (
-              <div className="accounts-grid">
-                {accounts.map((account) => (
-                  <AccountCard
-                    key={account._id}
-                    account={account}
-                    isSelected={selectedAccount?._id === account._id}
-                    onClick={handleAccountClick}
-                  />
-                ))}
-              </div>
-            )}
-          </section>
-
-          {selectedAccount && (
-            <section className="transactions-section">
-              <TransactionList
-                transactions={transactions}
-                accountId={selectedAccount._id}
-              />
-            </section>
+          {accounts.length === 0 ? (
+            <div>
+              <h3>No accounts found</h3>
+              <p>Add your first account to get started</p>
+            </div>
+          ) : (
+            <ul style={{ listStyle: 'none', padding: 0 }}>
+              {accounts.map((account) => (
+                <AccountCard
+                  key={account._id}
+                  account={account}
+                  isSelected={selectedAccount?._id === account._id}
+                  onClick={handleAccountClick}
+                />
+              ))}
+            </ul>
           )}
-        </div>
+        </section>
+
+        {selectedAccount && (
+          <section>
+            <TransactionList
+              transactions={transactions}
+              accountId={selectedAccount._id}
+            />
+          </section>
+        )}
       </main>
     </div>
   );

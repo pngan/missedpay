@@ -1,5 +1,3 @@
-import './TransactionList.css';
-
 const TransactionList = ({ transactions, accountId }) => {
   const formatCurrency = (amount, currency = 'NZD') => {
     return new Intl.NumberFormat('en-NZ', {
@@ -27,23 +25,6 @@ const TransactionList = ({ transactions, accountId }) => {
     }
   };
 
-  const getTransactionIcon = (type) => {
-    const icons = {
-      Payment: '💳',
-      Transfer: '↔️',
-      Eftpos: '🏪',
-      Credit: '⬇️',
-      Debit: '⬆️',
-      Interest: '📈',
-      Fee: '📋',
-      DirectDebit: '🔄',
-      DirectCredit: '💰',
-      Atm: '🏧',
-      StandingOrder: '📅',
-    };
-    return icons[type] || '💵';
-  };
-
   const filteredTransactions = accountId
     ? transactions.filter((t) => t._account === accountId)
     : transactions;
@@ -54,8 +35,7 @@ const TransactionList = ({ transactions, accountId }) => {
 
   if (sortedTransactions.length === 0) {
     return (
-      <div className="transactions-empty">
-        <div className="empty-icon">📭</div>
+      <div>
         <h3>No transactions yet</h3>
         <p>Transactions for this account will appear here</p>
       </div>
@@ -63,73 +43,40 @@ const TransactionList = ({ transactions, accountId }) => {
   }
 
   return (
-    <div className="transactions-list">
-      <div className="transactions-header">
-        <h2>Transactions</h2>
-        <span className="transaction-count">{sortedTransactions.length}</span>
-      </div>
-
-      <div className="transactions-items">
-        {sortedTransactions.map((transaction, index) => (
-          <div
-            key={transaction._id}
-            className="transaction-item"
-            style={{
-              animationDelay: `${index * 0.05}s`,
-            }}
-          >
-            <div className="transaction-icon">
-              {transaction.merchant?.name || transaction.category?.name ? (
-                <div className="transaction-logo">
-                  {transaction.meta?.logo ? (
-                    <img src={transaction.meta.logo} alt="" />
-                  ) : (
-                    <span>{getTransactionIcon(transaction.type)}</span>
-                  )}
-                </div>
-              ) : (
-                <span>{getTransactionIcon(transaction.type)}</span>
+    <div>
+      <h2>Transactions ({sortedTransactions.length})</h2>
+      <ul style={{ listStyle: 'none', padding: 0 }}>
+        {sortedTransactions.map((transaction) => (
+          <li key={transaction._id} style={{ marginBottom: '15px', padding: '10px', border: '1px solid #ddd' }}>
+            <div>
+              <span style={{ fontWeight: 'bold' }}>
+                {transaction.merchant?.name || transaction.description}
+              </span>
+              {' - '}
+              <span style={{ color: transaction.amount < 0 ? 'red' : 'green' }}>
+                {transaction.amount < 0 ? '' : '+'}
+                {formatCurrency(transaction.amount)}
+              </span>
+            </div>
+            <div>
+              <span>{formatDate(transaction.date)}</span>
+              {transaction.category && (
+                <span> | Category: {transaction.category.name}</span>
+              )}
+              {transaction.balance !== null && transaction.balance !== undefined && (
+                <span> | Balance: {formatCurrency(transaction.balance)}</span>
               )}
             </div>
-
-            <div className="transaction-details">
-              <div className="transaction-primary">
-                <h4 className="transaction-description">
-                  {transaction.merchant?.name || transaction.description}
-                </h4>
-                <span className={`transaction-amount ${transaction.amount < 0 ? 'negative' : 'positive'}`}>
-                  {transaction.amount < 0 ? '' : '+'}
-                  {formatCurrency(transaction.amount)}
-                </span>
+            {transaction.meta && (
+              <div style={{ fontSize: '0.9em', color: '#666' }}>
+                {transaction.meta.particulars && <span>{transaction.meta.particulars} </span>}
+                {transaction.meta.reference && <span>{transaction.meta.reference} </span>}
+                {transaction.meta.cardSuffix && <span>Card •••• {transaction.meta.cardSuffix}</span>}
               </div>
-              <div className="transaction-secondary">
-                <span className="transaction-date">{formatDate(transaction.date)}</span>
-                {transaction.category && (
-                  <span className="transaction-category">{transaction.category.name}</span>
-                )}
-                {transaction.balance !== null && transaction.balance !== undefined && (
-                  <span className="transaction-balance">
-                    Balance: {formatCurrency(transaction.balance)}
-                  </span>
-                )}
-              </div>
-              {transaction.meta && (
-                <div className="transaction-meta">
-                  {transaction.meta.particulars && (
-                    <span className="meta-item">{transaction.meta.particulars}</span>
-                  )}
-                  {transaction.meta.reference && (
-                    <span className="meta-item">{transaction.meta.reference}</span>
-                  )}
-                  {transaction.meta.cardSuffix && (
-                    <span className="meta-item">Card •••• {transaction.meta.cardSuffix}</span>
-                  )}
-                </div>
-              )}
-            </div>
-          </div>
+            )}
+          </li>
         ))}
-      </div>
+      </ul>
     </div>
   );
 };
