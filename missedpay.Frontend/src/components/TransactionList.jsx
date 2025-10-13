@@ -193,18 +193,18 @@ const TransactionList = ({ transactions, accountId, account }) => {
         Recent Transactions
       </h2>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
         {sortedTransactions.map((transaction) => (
           <div 
             key={transaction._id} 
             style={{ 
               backgroundColor: '#fff',
               border: '1px solid #e5e7eb',
-              borderRadius: '12px',
-              padding: '16px',
+              borderRadius: '8px',
+              padding: '12px 16px',
               display: 'flex',
               alignItems: 'center',
-              gap: '16px',
+              gap: '12px',
               transition: 'box-shadow 0.2s ease'
             }}
             onMouseEnter={(e) => {
@@ -215,14 +215,14 @@ const TransactionList = ({ transactions, accountId, account }) => {
             }}
           >
             <div style={{
-              width: '40px',
-              height: '40px',
+              width: '32px',
+              height: '32px',
               backgroundColor: getIconBackgroundColor(transaction.amount),
-              borderRadius: '8px',
+              borderRadius: '6px',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              fontSize: '20px',
+              fontSize: '16px',
               flexShrink: 0
             }}>
               <span style={{
@@ -233,45 +233,48 @@ const TransactionList = ({ transactions, accountId, account }) => {
               </span>
             </div>
 
-            <div style={{ flex: 1 }}>
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                marginBottom: '4px'
-              }}>
-                <span style={{ fontSize: '18px' }}>{getTransactionIcon(transaction)}</span>
-                <span style={{ 
-                  fontSize: '16px',
-                  fontWeight: '600',
-                  color: '#111'
-                }}>
-                  {transaction.merchant?.name || transaction.description}
-                </span>
-              </div>
-              <div style={{ 
-                fontSize: '14px',
+            <span style={{ fontSize: '16px', flexShrink: 0 }}>{getTransactionIcon(transaction)}</span>
+
+            <span style={{ 
+              fontSize: '15px',
+              fontWeight: '500',
+              color: '#111',
+              flex: '1',
+              minWidth: '0',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap'
+            }}>
+              {transaction.merchant?.name || transaction.description}
+            </span>
+
+            <span style={{ 
+              fontSize: '13px',
+              color: '#9ca3af',
+              flexShrink: 0
+            }}>
+              {formatDate(transaction.date)}
+            </span>
+
+            {transaction.category && (
+              <span style={{ 
+                fontSize: '13px',
                 color: '#6b7280',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px'
+                flexShrink: 0,
+                paddingLeft: '8px',
+                borderLeft: '1px solid #e5e7eb'
               }}>
-                <span>{formatDate(transaction.date)}</span>
-                {transaction.category && (
-                  <>
-                    <span>•</span>
-                    <span>{transaction.category.name}</span>
-                  </>
-                )}
-              </div>
-            </div>
+                {transaction.category.name}
+              </span>
+            )}
 
             <div style={{ 
-              fontSize: '16px',
+              fontSize: '15px',
               fontWeight: '600',
               color: transaction.amount < 0 ? '#dc2626' : '#059669',
               textAlign: 'right',
-              flexShrink: 0
+              flexShrink: 0,
+              minWidth: '80px'
             }}>
               {transaction.amount < 0 ? '-' : ''}
               {formatCurrency(Math.abs(transaction.amount))}

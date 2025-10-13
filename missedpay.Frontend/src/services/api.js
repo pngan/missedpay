@@ -45,3 +45,15 @@ export const transactionsApi = {
     return response.json();
   },
 };
+
+export const akahuApi = {
+  async refreshAll() {
+    const response = await fetch(`${API_BASE_URL}/Akahu/refresh-all`, {
+      method: 'POST',
+      headers,
+      mode: 'cors',
+    });
+    if (!response.ok) throw new Error('Failed to refresh data from Akahu');
+    return response.json();
+  },
+};

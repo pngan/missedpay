@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import AccountCard from './components/AccountCard';
 import TransactionList from './components/TransactionList';
-import { accountsApi, transactionsApi } from './services/api';
+import { accountsApi, transactionsApi, akahuApi } from './services/api';
 
 function App() {
   const [accounts, setAccounts] = useState([]);
@@ -9,6 +9,9 @@ function App() {
   const [selectedAccount, setSelectedAccount] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [refreshing, setRefreshing] = useState(false);
+  const [refreshStatus, setRefreshStatus] = useState(null);
+  const [activeView, setActiveView] = useState('accounts');
 
   useEffect(() => {
     loadData();
@@ -34,6 +37,39 @@ function App() {
 
   const handleAccountClick = (account) => {
     setSelectedAccount(selectedAccount?._id === account._id ? null : account);
+  };
+
+  const handleRefresh = async () => {
+    try {
+      setRefreshing(true);
+      setRefreshStatus(null);
+      setError(null);
+      
+      // Call Akahu refresh-all endpoint
+      const result = await akahuApi.refreshAll();
+      
+      // Show success message with details
+      setRefreshStatus({
+        type: 'success',
+        message: `Successfully refreshed! ${result.accountsResult?.accountsCreated || 0} new accounts, ${result.accountsResult?.accountsUpdated || 0} updated. ${result.transactionsResult?.transactionsCreated || 0} new transactions, ${result.transactionsResult?.transactionsUpdated || 0} updated.`
+      });
+      
+      // Reload data to show updated accounts and transactions
+      await loadData();
+    } catch (err) {
+      setRefreshStatus({
+        type: 'error',
+        message: `Failed to refresh: ${err.message}`
+      });
+      console.error('Error refreshing from Akahu:', err);
+    } finally {
+      setRefreshing(false);
+      
+      // Clear status message after 5 seconds
+      setTimeout(() => {
+        setRefreshStatus(null);
+      }, 5000);
+    }
   };
 
   const calculateTotalBalance = () => {
@@ -98,47 +134,208 @@ function App() {
       backgroundColor: '#f9fafb',
       fontFamily: 'system-ui, -apple-system, sans-serif'
     }}>
-      {/* Header - visible on all screens */}
+      <style>
+        {`
+          @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+          }
+          .refresh-icon-spinning {
+            animation: spin 2s linear infinite;
+            opacity: 0.5;
+          }
+        `}
+      </style>
+      
+      {/* Top Navigation Bar */}
       <div style={{
         backgroundColor: '#fff',
         borderBottom: '1px solid #e5e7eb',
-        padding: '20px',
         position: 'sticky',
         top: 0,
         zIndex: 10
       }}>
         <div style={{ 
           maxWidth: '1400px', 
+          margin: '0 auto',
+          padding: '0 20px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          height: '64px'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '32px' }}>
+            <h1 style={{ 
+              fontSize: '20px', 
+              fontWeight: '600', 
+              color: '#111',
+              margin: 0
+            }}>
+              MissedPay
+            </h1>
+            
+            <nav style={{ display: 'flex', gap: '8px' }}>
+              <button
+                onClick={() => setActiveView('accounts')}
+                style={{
+                  padding: '8px 16px',
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  backgroundColor: activeView === 'accounts' ? '#f3f4f6' : 'transparent',
+                  color: activeView === 'accounts' ? '#111' : '#6b7280',
+                  border: 'none',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  transition: 'background-color 0.2s, color 0.2s'
+                }}
+                onMouseOver={(e) => {
+                  if (activeView !== 'accounts') {
+                    e.currentTarget.style.backgroundColor = '#f9fafb';
+                  }
+                }}
+                onMouseOut={(e) => {
+                  if (activeView !== 'accounts') {
+                    e.currentTarget.style.backgroundColor = 'transparent';
+                  }
+                }}
+              >
+                Accounts
+              </button>
+              
+              <button
+                onClick={() => setActiveView('budgeting')}
+                style={{
+                  padding: '8px 16px',
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  backgroundColor: activeView === 'budgeting' ? '#f3f4f6' : 'transparent',
+                  color: activeView === 'budgeting' ? '#111' : '#6b7280',
+                  border: 'none',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  transition: 'background-color 0.2s, color 0.2s'
+                }}
+                onMouseOver={(e) => {
+                  if (activeView !== 'budgeting') {
+                    e.currentTarget.style.backgroundColor = '#f9fafb';
+                  }
+                }}
+                onMouseOut={(e) => {
+                  if (activeView !== 'budgeting') {
+                    e.currentTarget.style.backgroundColor = 'transparent';
+                  }
+                }}
+              >
+                Budgeting
+              </button>
+            </nav>
+          </div>
+          
+          {/* Refresh Button */}
+          <button
+            onClick={handleRefresh}
+            disabled={refreshing}
+            title={refreshing ? 'Refreshing...' : 'Refresh from Akahu'}
+            style={{
+              padding: '0',
+              fontSize: '24px',
+              backgroundColor: 'transparent',
+              color: refreshing ? '#9ca3af' : '#6b7280',
+              border: 'none',
+              borderRadius: '8px',
+              cursor: refreshing ? 'not-allowed' : 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              transition: 'color 0.2s, background-color 0.2s',
+              width: '40px',
+              height: '40px'
+            }}
+            onMouseOver={(e) => {
+              if (!refreshing) {
+                e.currentTarget.style.backgroundColor = '#f3f4f6';
+                e.currentTarget.style.color = '#111';
+              }
+            }}
+            onMouseOut={(e) => {
+              if (!refreshing) {
+                e.currentTarget.style.backgroundColor = 'transparent';
+                e.currentTarget.style.color = '#6b7280';
+              }
+            }}
+          >
+            <span style={{ 
+              display: 'inline-block',
+              animation: refreshing ? 'spin 2s linear infinite' : 'none',
+              opacity: refreshing ? '0.5' : '1'
+            }}>
+              ↻
+            </span>
+          </button>
+        </div>
+        
+        {/* Refresh Status Message */}
+        {refreshStatus && (
+          <div style={{
+            maxWidth: '1400px',
+            margin: '0 auto',
+            padding: '0 20px 12px',
+          }}>
+            <div style={{
+              padding: '12px 16px',
+              borderRadius: '6px',
+              backgroundColor: refreshStatus.type === 'success' ? '#dcfce7' : '#fee2e2',
+              border: `1px solid ${refreshStatus.type === 'success' ? '#86efac' : '#fca5a5'}`,
+              fontSize: '14px',
+              color: refreshStatus.type === 'success' ? '#166534' : '#991b1b'
+            }}>
+              {refreshStatus.message}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Page Header */}
+      <div style={{
+        backgroundColor: '#fff',
+        borderBottom: '1px solid #e5e7eb',
+        padding: '20px'
+      }}>
+        <div style={{ 
+          maxWidth: '1400px', 
           margin: '0 auto'
         }}>
-          <h1 style={{ 
+          <h2 style={{ 
             fontSize: '24px', 
             fontWeight: '600', 
             marginBottom: '4px',
             color: '#111'
           }}>
-            Bank Accounts
-          </h1>
+            {activeView === 'accounts' ? 'Bank Accounts' : 'Budgeting'}
+          </h2>
           <p style={{ 
             fontSize: '14px', 
             color: '#6b7280',
             margin: 0
           }}>
-            Manage your accounts and view transaction history
+            {activeView === 'accounts' 
+              ? 'Manage your accounts and view transaction history'
+              : 'Track your spending and manage budgets'}
           </p>
         </div>
       </div>
 
       {/* Main Content Area */}
-      <div style={{
-        maxWidth: '1400px',
-        margin: '0 auto',
-        padding: '20px',
-        display: 'flex',
-        gap: '24px',
-        flexWrap: 'wrap'
-      }}>
-        {/* Left Panel - Accounts */}
+      {activeView === 'accounts' ? (
+        <div style={{
+          maxWidth: '1400px',
+          margin: '0 auto',
+          padding: '20px',
+          display: 'flex',
+          gap: '24px',
+          flexWrap: 'wrap'
+        }}>
+          {/* Left Panel - Accounts */}
         <div style={{
           flex: '1 1 400px',
           minWidth: '300px',
@@ -298,7 +495,46 @@ function App() {
             </div>
           </div>
         )}
-      </div>
+        </div>
+      ) : (
+        /* Budgeting View */
+        <div style={{
+          maxWidth: '1400px',
+          margin: '0 auto',
+          padding: '20px'
+        }}>
+          <div style={{
+            backgroundColor: '#fff',
+            borderRadius: '12px',
+            padding: '60px 40px',
+            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+            textAlign: 'center'
+          }}>
+            <div style={{
+              fontSize: '64px',
+              marginBottom: '16px',
+              opacity: 0.3
+            }}>
+              📊
+            </div>
+            <h3 style={{ 
+              fontSize: '20px', 
+              fontWeight: '600',
+              marginBottom: '8px', 
+              color: '#111' 
+            }}>
+              Budgeting Coming Soon
+            </h3>
+            <p style={{ 
+              fontSize: '14px', 
+              color: '#6b7280',
+              margin: 0
+            }}>
+              Track your spending, set budgets, and manage your financial goals
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
