@@ -132,6 +132,21 @@ public class AkahuService
 
     private Transaction MapAkahuTransaction(AkahuTransaction akahuTransaction)
     {
+        // Map category groups if they exist
+        Dictionary<string, CategoryGroup>? groups = null;
+        if (akahuTransaction.Category?.Groups?.PersonalFinance != null)
+        {
+            groups = new Dictionary<string, CategoryGroup>
+            {
+                { "personal_finance", new CategoryGroup
+                    {
+                        Id = akahuTransaction.Category.Groups.PersonalFinance.Id ?? string.Empty,
+                        Name = akahuTransaction.Category.Groups.PersonalFinance.Name ?? string.Empty
+                    }
+                }
+            };
+        }
+        
         return new Transaction
         {
             Id = akahuTransaction.Id,
@@ -147,7 +162,7 @@ public class AkahuService
             {
                 Id = akahuTransaction.Category.Id,
                 Name = akahuTransaction.Category.Name,
-                Groups = new Dictionary<string, CategoryGroup>()
+                Groups = groups ?? new Dictionary<string, CategoryGroup>()
             } : null,
             Merchant = akahuTransaction.Merchant != null ? new Merchant
             {

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import AccountCard from './components/AccountCard';
 import TransactionList from './components/TransactionList';
+import BudgetingView from './components/BudgetingView';
 import { accountsApi, transactionsApi, akahuApi } from './services/api';
 
 function App() {
@@ -498,42 +499,7 @@ function App() {
         </div>
       ) : (
         /* Budgeting View */
-        <div style={{
-          maxWidth: '1400px',
-          margin: '0 auto',
-          padding: '20px'
-        }}>
-          <div style={{
-            backgroundColor: '#fff',
-            borderRadius: '12px',
-            padding: '60px 40px',
-            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-            textAlign: 'center'
-          }}>
-            <div style={{
-              fontSize: '64px',
-              marginBottom: '16px',
-              opacity: 0.3
-            }}>
-              📊
-            </div>
-            <h3 style={{ 
-              fontSize: '20px', 
-              fontWeight: '600',
-              marginBottom: '8px', 
-              color: '#111' 
-            }}>
-              Budgeting Coming Soon
-            </h3>
-            <p style={{ 
-              fontSize: '14px', 
-              color: '#6b7280',
-              margin: 0
-            }}>
-              Track your spending, set budgets, and manage your financial goals
-            </p>
-          </div>
-        </div>
+        <BudgetingView transactions={transactions} />
       )}
     </div>
   );
