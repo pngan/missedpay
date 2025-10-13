@@ -77,15 +77,33 @@ function App() {
     return accounts.reduce((sum, account) => sum + (account.balance?.current || 0), 0);
   };
 
+  const getTransactionsLast31Days = () => {
+    const cutoffDate = new Date();
+    cutoffDate.setDate(cutoffDate.getDate() - 31);
+    return transactions.filter(t => new Date(t.date) >= cutoffDate);
+  };
+
+  const calculateTotalIncome = () => {
+    return getTransactionsLast31Days()
+      .filter(t => t.amount > 0)
+      .reduce((sum, t) => sum + t.amount, 0);
+  };
+
+  const calculateTotalExpenses = () => {
+    return getTransactionsLast31Days()
+      .filter(t => t.amount < 0)
+      .reduce((sum, t) => sum + Math.abs(t.amount), 0);
+  };
+
+  const getTransactionCount = (accountId) => {
+    return transactions.filter(t => t._account === accountId).length;
+  };
+
   const formatCurrency = (amount, currency = 'NZD') => {
     return '$' + new Intl.NumberFormat('en-US', {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     }).format(amount);
-  };
-
-  const getTransactionCount = (accountId) => {
-    return transactions.filter(t => t._account === accountId).length;
   };
 
   if (loading) {
@@ -350,22 +368,69 @@ function App() {
             marginBottom: '20px',
             boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
           }}>
-            <p style={{ 
-              fontSize: '14px', 
-              color: '#6b7280',
-              margin: '0 0 8px 0',
-              fontWeight: '500'
+            <div style={{ marginBottom: '20px' }}>
+              <p style={{ 
+                fontSize: '14px', 
+                color: '#6b7280',
+                margin: '0 0 8px 0',
+                fontWeight: '500'
+              }}>
+                Total Balance
+              </p>
+              <p style={{ 
+                fontSize: '32px', 
+                fontWeight: '600',
+                margin: 0,
+                color: '#111'
+              }}>
+                {formatCurrency(calculateTotalBalance())}
+              </p>
+            </div>
+
+            <div style={{
+              display: 'flex',
+              gap: '16px',
+              paddingTop: '20px',
+              borderTop: '1px solid #e5e7eb'
             }}>
-              Total Balance
-            </p>
-            <p style={{ 
-              fontSize: '32px', 
-              fontWeight: '600',
-              margin: 0,
-              color: '#111'
-            }}>
-              {formatCurrency(calculateTotalBalance())}
-            </p>
+              <div style={{ flex: 1 }}>
+                <p style={{ 
+                  fontSize: '12px', 
+                  color: '#6b7280',
+                  margin: '0 0 4px 0',
+                  fontWeight: '500'
+                }}>
+                  Income (31 days)
+                </p>
+                <p style={{ 
+                  fontSize: '18px', 
+                  fontWeight: '600',
+                  margin: 0,
+                  color: '#059669'
+                }}>
+                  {formatCurrency(calculateTotalIncome())}
+                </p>
+              </div>
+
+              <div style={{ flex: 1 }}>
+                <p style={{ 
+                  fontSize: '12px', 
+                  color: '#6b7280',
+                  margin: '0 0 4px 0',
+                  fontWeight: '500'
+                }}>
+                  Expenses (31 days)
+                </p>
+                <p style={{ 
+                  fontSize: '18px', 
+                  fontWeight: '600',
+                  margin: 0,
+                  color: '#dc2626'
+                }}>
+                  {formatCurrency(calculateTotalExpenses())}
+                </p>
+              </div>
+            </div>
           </div>
 
           {/* Accounts List */}
@@ -402,7 +467,7 @@ function App() {
                     account={account}
                     isSelected={selectedAccount?._id === account._id}
                     onClick={handleAccountClick}
-                    transactionCount={getTransactionCount(account._id)}
+                    transactions={transactions.filter(t => t._account === account._id)}
                   />
                 ))}
               </div>

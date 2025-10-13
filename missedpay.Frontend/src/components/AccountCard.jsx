@@ -1,9 +1,27 @@
-const AccountCard = ({ account, isSelected, onClick, transactionCount = 0 }) => {
+const AccountCard = ({ account, isSelected, onClick, transactions = [] }) => {
   const formatCurrency = (amount, currency = 'NZD') => {
     return '$' + new Intl.NumberFormat('en-US', {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     }).format(amount);
+  };
+
+  const getTransactionsLast31Days = () => {
+    const cutoffDate = new Date();
+    cutoffDate.setDate(cutoffDate.getDate() - 31);
+    return transactions.filter(t => new Date(t.date) >= cutoffDate);
+  };
+
+  const calculateIncome = () => {
+    return getTransactionsLast31Days()
+      .filter(t => t.amount > 0)
+      .reduce((sum, t) => sum + t.amount, 0);
+  };
+
+  const calculateExpenses = () => {
+    return getTransactionsLast31Days()
+      .filter(t => t.amount < 0)
+      .reduce((sum, t) => sum + Math.abs(t.amount), 0);
   };
 
   const getAccountIcon = (type) => {
@@ -104,15 +122,34 @@ const AccountCard = ({ account, isSelected, onClick, transactionCount = 0 }) => 
             fontSize: '18px',
             fontWeight: '600',
             color: '#111',
-            marginBottom: '2px'
+            marginBottom: '8px'
           }}>
             {formatCurrency(account.balance.current, account.balance.currency)}
           </div>
           <div style={{ 
-            fontSize: '13px',
-            color: '#6b7280'
+            display: 'flex',
+            gap: '12px',
+            fontSize: '12px',
+            marginBottom: '4px'
           }}>
-            {transactionCount} transaction{transactionCount !== 1 ? 's' : ''}
+            <div style={{ textAlign: 'right' }}>
+              <div style={{ color: '#9ca3af', marginBottom: '2px' }}>Income</div>
+              <div style={{ color: '#059669', fontWeight: '600' }}>
+                {formatCurrency(calculateIncome())}
+              </div>
+            </div>
+            <div style={{ textAlign: 'right' }}>
+              <div style={{ color: '#9ca3af', marginBottom: '2px' }}>Expenses</div>
+              <div style={{ color: '#dc2626', fontWeight: '600' }}>
+                {formatCurrency(calculateExpenses())}
+              </div>
+            </div>
+          </div>
+          <div style={{ 
+            fontSize: '11px',
+            color: '#9ca3af'
+          }}>
+            {transactions.length} transaction{transactions.length !== 1 ? 's' : ''}
           </div>
         </div>
         

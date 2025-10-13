@@ -75,26 +75,61 @@ public class AkahuService
         
         try
         {
-            var response = await _httpClient.GetAsync("transactions");
-            response.EnsureSuccessStatusCode();
+            var allTransactions = new List<Transaction>();
+            string? cursor = null;
+            var cutoffDate = DateTime.UtcNow.AddDays(-31);
+            var hasEnoughHistory = false;
+            var pageCount = 0;
+            const int maxPages = 10; // Safety limit to avoid infinite loops
             
-            var content = await response.Content.ReadAsStringAsync();
-            var akahuResponse = JsonSerializer.Deserialize<AkahuTransactionsResponse>(content, new JsonSerializerOptions 
-            { 
-                PropertyNameCaseInsensitive = true 
-            });
-
-            if (akahuResponse?.Items == null)
+            do
             {
-                _logger.LogWarning("No transactions returned from Akahu API");
-                return new List<Transaction>();
-            }
+                pageCount++;
+                var url = string.IsNullOrEmpty(cursor) ? "transactions" : $"transactions?cursor={cursor}";
+                
+                _logger.LogInformation($"Fetching transactions page {pageCount}" + (cursor != null ? $" with cursor" : ""));
+                
+                var response = await _httpClient.GetAsync(url);
+                response.EnsureSuccessStatusCode();
+                
+                var content = await response.Content.ReadAsStringAsync();
+                var akahuResponse = JsonSerializer.Deserialize<AkahuTransactionsResponse>(content, new JsonSerializerOptions 
+                { 
+                    PropertyNameCaseInsensitive = true 
+                });
 
-            // Map Akahu transactions to our Transaction model
-            var transactions = akahuResponse.Items.Select(MapAkahuTransaction).ToList();
+                if (akahuResponse?.Items == null || akahuResponse.Items.Count == 0)
+                {
+                    _logger.LogInformation("No more transactions available from Akahu API");
+                    break;
+                }
+
+                // Map and add transactions from this page
+                var pageTransactions = akahuResponse.Items.Select(MapAkahuTransaction).ToList();
+                allTransactions.AddRange(pageTransactions);
+                
+                // Check if we have data going back 31 days
+                var oldestTransactionDate = pageTransactions.Min(t => t.Date);
+                if (oldestTransactionDate <= cutoffDate)
+                {
+                    hasEnoughHistory = true;
+                    _logger.LogInformation($"Reached 31-day history. Oldest transaction: {oldestTransactionDate:yyyy-MM-dd}");
+                }
+                
+                // Get next cursor
+                cursor = akahuResponse.Cursor?.Next;
+                
+                // Continue if we don't have enough history and there's more data
+            } while (!hasEnoughHistory && cursor != null && pageCount < maxPages);
             
-            _logger.LogInformation($"Retrieved {transactions.Count} transactions from Akahu");
-            return transactions;
+            // Filter to only include transactions from the last 31 days
+            var filteredTransactions = allTransactions
+                .Where(t => t.Date >= cutoffDate)
+                .OrderByDescending(t => t.Date)
+                .ToList();
+            
+            _logger.LogInformation($"Retrieved {allTransactions.Count} total transactions, filtered to {filteredTransactions.Count} transactions from last 31 days");
+            return filteredTransactions;
         }
         catch (HttpRequestException ex)
         {
@@ -319,6 +354,15 @@ public class AkahuTransactionsResponse
 {
     [JsonPropertyName("items")]
     public List<AkahuTransaction> Items { get; set; } = new();
+    
+    [JsonPropertyName("cursor")]
+    public AkahuCursor? Cursor { get; set; }
+}
+
+public class AkahuCursor
+{
+    [JsonPropertyName("next")]
+    public string? Next { get; set; }
 }
 
 public class AkahuTransaction

@@ -83,7 +83,14 @@ const TransactionList = ({ transactions, accountId, account }) => {
     ? transactions.filter((t) => t._account === accountId)
     : transactions;
 
-  const sortedTransactions = [...filteredTransactions].sort(
+  // Filter to last 31 days
+  const cutoffDate = new Date();
+  cutoffDate.setDate(cutoffDate.getDate() - 31);
+  const last31DaysTransactions = filteredTransactions.filter(
+    (t) => new Date(t.date) >= cutoffDate
+  );
+
+  const sortedTransactions = [...last31DaysTransactions].sort(
     (a, b) => new Date(b.date) - new Date(a.date)
   );
 
@@ -190,7 +197,7 @@ const TransactionList = ({ transactions, accountId, account }) => {
         color: '#111',
         marginBottom: '16px'
       }}>
-        Recent Transactions
+        Recent Transactions (Last 31 Days)
       </h2>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
