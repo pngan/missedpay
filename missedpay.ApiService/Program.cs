@@ -16,7 +16,20 @@ builder.Services.AddTenantProvider(builder.Configuration);
 builder.AddNpgsqlDbContext<MissedPayDbContext>("missedpaydb");
 
 // Add Ollama client - MUST come before services that depend on it
-builder.AddOllamaApiClient("ollama");
+// Only add if Ollama connection string is configured
+var ollamaConnectionString = builder.Configuration.GetConnectionString("ollama");
+var hasOllamaConfig = !string.IsNullOrEmpty(ollamaConnectionString) || 
+                      !string.IsNullOrEmpty(builder.Configuration["Aspire:OllamaSharp:Endpoint"]);
+
+if (hasOllamaConfig)
+{
+    builder.AddOllamaApiClient("ollama");
+    Console.WriteLine("Ollama client configured - AI categorization will be available");
+}
+else
+{
+    Console.WriteLine("Warning: Ollama not configured - AI categorization will not be available");
+}
 
 // Add CORS policy
 builder.Services.AddCors(options =>
@@ -37,14 +50,23 @@ builder.Services.AddScoped<IAccountService, AccountService>();
 builder.Services.AddScoped<ITransactionService, TransactionService>();
 
 // Register categorization services
-builder.Services.AddSingleton<AiCategorySelector>();
-builder.Services.AddSingleton<HybridCategorySelector>();
-builder.Services.AddSingleton<ICategorySelector, AiCategorySelector>(sp => sp.GetRequiredService<AiCategorySelector>());
-builder.Services.AddSingleton<ICategorySelector, HybridCategorySelector>(sp => sp.GetRequiredService<HybridCategorySelector>());
-builder.Services.AddSingleton<IMerchantCategorizationService, MerchantCategorizationService>();
+// Only register AI selectors if Ollama is configured
+if (hasOllamaConfig)
+{
+    builder.Services.AddSingleton<AiCategorySelector>();
+    builder.Services.AddSingleton<HybridCategorySelector>();
+    builder.Services.AddSingleton<ICategorySelector, AiCategorySelector>(sp => sp.GetRequiredService<AiCategorySelector>());
+    builder.Services.AddSingleton<ICategorySelector, HybridCategorySelector>(sp => sp.GetRequiredService<HybridCategorySelector>());
+    
+    // Keep legacy AI categorization service for backward compatibility
+    builder.Services.AddSingleton<IAiCategorizationService, AiCategorizationService>();
+}
+else
+{
+    Console.WriteLine("Skipping AI selector registration - Ollama not configured");
+}
 
-// Keep legacy AI categorization service for backward compatibility
-builder.Services.AddSingleton<IAiCategorizationService, AiCategorizationService>();
+builder.Services.AddSingleton<IMerchantCategorizationService, MerchantCategorizationService>();
 
 // Load Akahu tokens from environment variables
 builder.Configuration["Akahu:UserToken"] = Environment.GetEnvironmentVariable("AKAHU_USER_TOKEN") 
