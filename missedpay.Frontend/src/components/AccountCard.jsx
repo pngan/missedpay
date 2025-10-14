@@ -44,6 +44,12 @@ const AccountCard = ({ account, isSelected, onClick, transactions = [] }) => {
 
   return (
     <div 
+      id={`account-card-${account._id}`}
+      data-component="account-card"
+      data-account-id={account._id}
+      data-account-name={account.name}
+      data-account-type={account.type}
+      data-is-selected={isSelected}
       onClick={() => onClick(account)}
       style={{ 
         cursor: 'pointer',
@@ -71,41 +77,53 @@ const AccountCard = ({ account, isSelected, onClick, transactions = [] }) => {
       }}
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flex: 1 }}>
-        <div style={{
-          width: '48px',
-          height: '48px',
-          backgroundColor: '#f3f4f6',
-          borderRadius: '8px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          fontSize: '24px',
-          flexShrink: 0
-        }}>
+        <div 
+          data-element="account-icon"
+          style={{
+            width: '48px',
+            height: '48px',
+            backgroundColor: '#f3f4f6',
+            borderRadius: '8px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: '24px',
+            flexShrink: 0
+          }}
+        >
           {getAccountIcon(account.type)}
         </div>
         
-        <div style={{ flex: 1 }}>
+        <div data-element="account-info" style={{ flex: 1 }}>
           <div style={{ marginBottom: '4px' }}>
-            <span style={{ 
-              fontSize: '16px',
-              fontWeight: '600',
-              color: '#111',
-              marginRight: '8px'
-            }}>
+            <span 
+              data-element="account-name"
+              style={{ 
+                fontSize: '16px',
+                fontWeight: '600',
+                color: '#111',
+                marginRight: '8px'
+              }}
+            >
               {account.name}
             </span>
-            <span style={{ 
-              fontSize: '14px',
-              color: '#6b7280'
-            }}>
+            <span 
+              data-element="account-number"
+              style={{ 
+                fontSize: '14px',
+                color: '#6b7280'
+              }}
+            >
               {formatAccountNumber(account.formattedAccount)}
             </span>
           </div>
-          <div style={{ 
-            fontSize: '14px',
-            color: '#9ca3af'
-          }}>
+          <div 
+            data-element="account-type"
+            style={{ 
+              fontSize: '14px',
+              color: '#9ca3af'
+            }}
+          >
             {account.type}
           </div>
         </div>
@@ -117,46 +135,64 @@ const AccountCard = ({ account, isSelected, onClick, transactions = [] }) => {
         gap: '16px',
         flexShrink: 0
       }}>
-        <div style={{ textAlign: 'right' }}>
-          <div style={{ 
-            fontSize: '18px',
-            fontWeight: '600',
-            color: '#111',
-            marginBottom: '8px'
-          }}>
+        <div data-element="account-summary" style={{ textAlign: 'right' }}>
+          <div 
+            data-element="account-balance"
+            style={{ 
+              fontSize: '18px',
+              fontWeight: '600',
+              color: '#111',
+              marginBottom: '8px'
+            }}
+          >
             {formatCurrency(account.balance.current, account.balance.currency)}
           </div>
-          <div style={{ 
-            display: 'flex',
-            gap: '12px',
-            fontSize: '12px',
-            marginBottom: '4px'
-          }}>
-            <div style={{ textAlign: 'right' }}>
+          <div 
+            data-element="account-income-expenses"
+            style={{ 
+              display: 'flex',
+              gap: '12px',
+              fontSize: '12px',
+              marginBottom: '4px'
+            }}
+          >
+            <div data-element="income-summary" style={{ textAlign: 'right' }}>
               <div style={{ color: '#9ca3af', marginBottom: '2px' }}>Income</div>
-              <div style={{ color: '#059669', fontWeight: '600' }}>
+              <div 
+                data-element="income-amount"
+                style={{ color: '#059669', fontWeight: '600' }}
+              >
                 {formatCurrency(calculateIncome())}
               </div>
             </div>
-            <div style={{ textAlign: 'right' }}>
+            <div data-element="expenses-summary" style={{ textAlign: 'right' }}>
               <div style={{ color: '#9ca3af', marginBottom: '2px' }}>Expenses</div>
-              <div style={{ color: '#dc2626', fontWeight: '600' }}>
+              <div 
+                data-element="expenses-amount"
+                style={{ color: '#dc2626', fontWeight: '600' }}
+              >
                 {formatCurrency(calculateExpenses())}
               </div>
             </div>
           </div>
-          <div style={{ 
-            fontSize: '11px',
-            color: '#9ca3af'
-          }}>
+          <div 
+            data-element="transaction-count"
+            style={{ 
+              fontSize: '11px',
+              color: '#9ca3af'
+            }}
+          >
             {transactions.length} transaction{transactions.length !== 1 ? 's' : ''}
           </div>
         </div>
         
-        <div style={{
-          fontSize: '18px',
-          color: '#9ca3af'
-        }}>
+        <div 
+          data-element="chevron-icon"
+          style={{
+            fontSize: '18px',
+            color: '#9ca3af'
+          }}
+        >
           ›
         </div>
       </div>

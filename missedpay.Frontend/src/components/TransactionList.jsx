@@ -96,12 +96,16 @@ const TransactionList = ({ transactions, accountId, account }) => {
 
   if (sortedTransactions.length === 0) {
     return (
-      <div style={{
-        textAlign: 'center',
-        padding: '40px',
-        backgroundColor: '#f9fafb',
-        borderRadius: '12px'
-      }}>
+      <div 
+        id="transaction-list-empty-state"
+        data-component="empty-state"
+        style={{
+          textAlign: 'center',
+          padding: '40px',
+          backgroundColor: '#f9fafb',
+          borderRadius: '12px'
+        }}
+      >
         <h3 style={{ fontSize: '18px', marginBottom: '8px', color: '#111' }}>No transactions yet</h3>
         <p style={{ fontSize: '14px', color: '#6b7280' }}>Transactions for this account will appear here</p>
       </div>
@@ -109,101 +113,148 @@ const TransactionList = ({ transactions, accountId, account }) => {
   }
 
   return (
-    <div>
+    <div id="transaction-list-container" data-component="transaction-list">
       {/* Expanded Account Card */}
       {account && (
-        <div style={{
-          backgroundColor: '#f3f4f6',
-          border: '1px solid #e5e7eb',
-          borderRadius: '12px',
-          padding: '20px',
-          marginBottom: '24px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between'
-        }}>
+        <div 
+          id="transaction-list-account-header"
+          data-component="account-header"
+          data-account-id={accountId}
+          style={{
+            backgroundColor: '#f3f4f6',
+            border: '1px solid #e5e7eb',
+            borderRadius: '12px',
+            padding: '20px',
+            marginBottom: '24px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between'
+          }}
+        >
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-            <div style={{
-              width: '48px',
-              height: '48px',
-              backgroundColor: '#fff',
-              borderRadius: '8px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '24px'
-            }}>
+            <div 
+              id="account-header-icon"
+              data-element="account-icon"
+              style={{
+                width: '48px',
+                height: '48px',
+                backgroundColor: '#fff',
+                borderRadius: '8px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '24px'
+              }}
+            >
               💳
             </div>
             
-            <div>
+            <div id="account-header-details" data-element="account-details">
               <div style={{ marginBottom: '4px' }}>
-                <span style={{ 
-                  fontSize: '16px',
-                  fontWeight: '600',
-                  color: '#111',
-                  marginRight: '8px'
-                }}>
+                <span 
+                  id="account-header-name"
+                  data-element="account-name"
+                  style={{ 
+                    fontSize: '16px',
+                    fontWeight: '600',
+                    color: '#111',
+                    marginRight: '8px'
+                  }}
+                >
                   {account.name}
                 </span>
-                <span style={{ 
-                  fontSize: '14px',
-                  color: '#6b7280'
-                }}>
+                <span 
+                  id="account-header-number"
+                  data-element="account-number"
+                  style={{ 
+                    fontSize: '14px',
+                    color: '#6b7280'
+                  }}
+                >
                   {formatAccountNumber(account.formattedAccount)}
                 </span>
               </div>
-              <div style={{ 
-                fontSize: '14px',
-                color: '#9ca3af'
-              }}>
+              <div 
+                id="account-header-type"
+                data-element="account-type"
+                style={{ 
+                  fontSize: '14px',
+                  color: '#9ca3af'
+                }}
+              >
                 {account.type}
               </div>
             </div>
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-            <div style={{ textAlign: 'right' }}>
-              <div style={{ 
-                fontSize: '18px',
-                fontWeight: '600',
-                color: '#111',
-                marginBottom: '2px'
-              }}>
+            <div id="account-header-summary" data-element="account-summary" style={{ textAlign: 'right' }}>
+              <div 
+                id="account-header-balance"
+                data-element="account-balance"
+                style={{ 
+                  fontSize: '18px',
+                  fontWeight: '600',
+                  color: '#111',
+                  marginBottom: '2px'
+                }}
+              >
                 {formatCurrency(account.balance.current, account.balance.currency)}
               </div>
-              <div style={{ 
-                fontSize: '13px',
-                color: '#6b7280'
-              }}>
+              <div 
+                id="account-header-transaction-count"
+                data-element="transaction-count"
+                style={{ 
+                  fontSize: '13px',
+                  color: '#6b7280'
+                }}
+              >
                 {sortedTransactions.length} transaction{sortedTransactions.length !== 1 ? 's' : ''}
               </div>
             </div>
             
-            <div style={{
-              fontSize: '18px',
-              color: '#9ca3af',
-              transform: 'rotate(90deg)'
-            }}>
+            <div 
+              id="account-header-chevron"
+              data-element="chevron-icon"
+              style={{
+                fontSize: '18px',
+                color: '#9ca3af',
+                transform: 'rotate(90deg)'
+              }}
+            >
               ›
             </div>
           </div>
         </div>
       )}
 
-      <h2 style={{
-        fontSize: '20px',
-        fontWeight: '600',
-        color: '#111',
-        marginBottom: '16px'
-      }}>
+      <h2 
+        id="transaction-list-title"
+        data-element="section-title"
+        style={{
+          fontSize: '20px',
+          fontWeight: '600',
+          color: '#111',
+          marginBottom: '16px'
+        }}
+      >
         Recent Transactions (Last 31 Days)
       </h2>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+      <div 
+        id="transaction-list-items"
+        data-component="transaction-items"
+        style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}
+      >
         {sortedTransactions.map((transaction) => (
           <div 
-            key={transaction._id} 
+            key={transaction._id}
+            id={`transaction-item-${transaction._id}`}
+            data-component="transaction-item"
+            data-transaction-id={transaction._id}
+            data-merchant={transaction.merchant?.name}
+            data-amount={transaction.amount}
+            data-category={transaction.category?.name}
             style={{ 
               backgroundColor: '#fff',
               border: '1px solid #e5e7eb',
@@ -221,17 +272,20 @@ const TransactionList = ({ transactions, accountId, account }) => {
               e.currentTarget.style.boxShadow = 'none';
             }}
           >
-            <div style={{
-              width: '32px',
-              height: '32px',
-              backgroundColor: getIconBackgroundColor(transaction.amount),
-              borderRadius: '6px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '16px',
-              flexShrink: 0
-            }}>
+            <div 
+              data-element="transaction-direction-indicator"
+              style={{
+                width: '32px',
+                height: '32px',
+                backgroundColor: getIconBackgroundColor(transaction.amount),
+                borderRadius: '6px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '16px',
+                flexShrink: 0
+              }}
+            >
               <span style={{
                 filter: 'grayscale(1)',
                 opacity: 0.8
@@ -240,49 +294,66 @@ const TransactionList = ({ transactions, accountId, account }) => {
               </span>
             </div>
 
-            <span style={{ fontSize: '16px', flexShrink: 0 }}>{getTransactionIcon(transaction)}</span>
+            <span 
+              data-element="transaction-category-icon"
+              style={{ fontSize: '16px', flexShrink: 0 }}
+            >
+              {getTransactionIcon(transaction)}
+            </span>
 
-            <span style={{ 
-              fontSize: '15px',
-              fontWeight: '500',
-              color: '#111',
-              flex: '1',
-              minWidth: '0',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              whiteSpace: 'nowrap'
-            }}>
+            <span 
+              data-element="transaction-description"
+              style={{ 
+                fontSize: '15px',
+                fontWeight: '500',
+                color: '#111',
+                flex: '1',
+                minWidth: '0',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap'
+              }}
+            >
               {transaction.merchant?.name || transaction.description}
             </span>
 
-            <span style={{ 
-              fontSize: '13px',
-              color: '#9ca3af',
-              flexShrink: 0
-            }}>
+            <span 
+              data-element="transaction-date"
+              style={{ 
+                fontSize: '13px',
+                color: '#9ca3af',
+                flexShrink: 0
+              }}
+            >
               {formatDate(transaction.date)}
             </span>
 
             {transaction.category && (
-              <span style={{ 
-                fontSize: '13px',
-                color: '#6b7280',
-                flexShrink: 0,
-                paddingLeft: '8px',
-                borderLeft: '1px solid #e5e7eb'
-              }}>
+              <span 
+                data-element="transaction-category-name"
+                style={{ 
+                  fontSize: '13px',
+                  color: '#6b7280',
+                  flexShrink: 0,
+                  paddingLeft: '8px',
+                  borderLeft: '1px solid #e5e7eb'
+                }}
+              >
                 {transaction.category.name}
               </span>
             )}
 
-            <div style={{ 
-              fontSize: '15px',
-              fontWeight: '600',
-              color: transaction.amount < 0 ? '#dc2626' : '#059669',
-              textAlign: 'right',
-              flexShrink: 0,
-              minWidth: '80px'
-            }}>
+            <div 
+              data-element="transaction-amount"
+              style={{ 
+                fontSize: '15px',
+                fontWeight: '600',
+                color: transaction.amount < 0 ? '#dc2626' : '#059669',
+                textAlign: 'right',
+                flexShrink: 0,
+                minWidth: '80px'
+              }}
+            >
               {transaction.amount < 0 ? '-' : ''}
               {formatCurrency(Math.abs(transaction.amount))}
             </div>

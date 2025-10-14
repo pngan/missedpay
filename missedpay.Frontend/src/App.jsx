@@ -148,11 +148,15 @@ function App() {
   }
 
   return (
-    <div style={{ 
-      minHeight: '100vh',
-      backgroundColor: '#f9fafb',
-      fontFamily: 'system-ui, -apple-system, sans-serif'
-    }}>
+    <div 
+      id="app-container"
+      data-component="app"
+      style={{ 
+        minHeight: '100vh',
+        backgroundColor: '#f9fafb',
+        fontFamily: 'system-ui, -apple-system, sans-serif'
+      }}
+    >
       <style>
         {`
           @keyframes spin {
@@ -167,13 +171,17 @@ function App() {
       </style>
       
       {/* Top Navigation Bar */}
-      <div style={{
-        backgroundColor: '#fff',
-        borderBottom: '1px solid #e5e7eb',
-        position: 'sticky',
-        top: 0,
-        zIndex: 10
-      }}>
+      <div 
+        id="top-navigation-bar"
+        data-component="navigation"
+        style={{
+          backgroundColor: '#fff',
+          borderBottom: '1px solid #e5e7eb',
+          position: 'sticky',
+          top: 0,
+          zIndex: 10
+        }}
+      >
         <div style={{ 
           maxWidth: '1400px', 
           margin: '0 auto',
@@ -193,8 +201,15 @@ function App() {
               MissedPay
             </h1>
             
-            <nav style={{ display: 'flex', gap: '8px' }}>
+            <nav 
+              id="view-navigation"
+              data-element="view-tabs"
+              style={{ display: 'flex', gap: '8px' }}
+            >
               <button
+                id="accounts-tab"
+                data-tab="accounts"
+                data-active={activeView === 'accounts'}
                 onClick={() => setActiveView('accounts')}
                 style={{
                   padding: '8px 16px',
@@ -222,6 +237,9 @@ function App() {
               </button>
               
               <button
+                id="budgeting-tab"
+                data-tab="budgeting"
+                data-active={activeView === 'budgeting'}
                 onClick={() => setActiveView('budgeting')}
                 style={{
                   padding: '8px 16px',
@@ -252,6 +270,9 @@ function App() {
           
           {/* Refresh Button */}
           <button
+            id="refresh-button"
+            data-element="refresh-button"
+            data-refreshing={refreshing}
             onClick={handleRefresh}
             disabled={refreshing}
             title={refreshing ? 'Refreshing...' : 'Refresh from Akahu'}
@@ -295,11 +316,16 @@ function App() {
         
         {/* Refresh Status Message */}
         {refreshStatus && (
-          <div style={{
-            maxWidth: '1400px',
-            margin: '0 auto',
-            padding: '0 20px 12px',
-          }}>
+          <div 
+            id="refresh-status-message"
+            data-element="status-message"
+            data-status-type={refreshStatus.type}
+            style={{
+              maxWidth: '1400px',
+              margin: '0 auto',
+              padding: '0 20px 12px',
+            }}
+          >
             <div style={{
               padding: '12px 16px',
               borderRadius: '6px',
@@ -315,11 +341,16 @@ function App() {
       </div>
 
       {/* Page Header */}
-      <div style={{
-        backgroundColor: '#fff',
-        borderBottom: '1px solid #e5e7eb',
-        padding: '20px'
-      }}>
+      <div 
+        id="page-header"
+        data-component="page-header"
+        data-active-view={activeView}
+        style={{
+          backgroundColor: '#fff',
+          borderBottom: '1px solid #e5e7eb',
+          padding: '20px'
+        }}
+      >
         <div style={{ 
           maxWidth: '1400px', 
           margin: '0 auto'
@@ -346,28 +377,40 @@ function App() {
 
       {/* Main Content Area */}
       {activeView === 'accounts' ? (
-        <div style={{
-          maxWidth: '1400px',
-          margin: '0 auto',
-          padding: '20px',
-          display: 'flex',
-          gap: '24px',
-          flexWrap: 'wrap'
-        }}>
+        <div 
+          id="accounts-view"
+          data-component="accounts-view"
+          style={{
+            maxWidth: '1400px',
+            margin: '0 auto',
+            padding: '20px',
+            display: 'flex',
+            gap: '24px',
+            flexWrap: 'wrap'
+          }}
+        >
           {/* Left Panel - Accounts */}
-        <div style={{
-          flex: '1 1 400px',
-          minWidth: '300px',
-          maxWidth: selectedAccount ? '450px' : '100%'
-        }}>
+        <div 
+          id="accounts-panel"
+          data-panel="accounts"
+          style={{
+            flex: '1 1 400px',
+            minWidth: '300px',
+            maxWidth: selectedAccount ? '450px' : '100%'
+          }}
+        >
           {/* Total Balance Card */}
-          <div style={{
-            backgroundColor: '#fff',
-            borderRadius: '12px',
-            padding: '24px',
-            marginBottom: '20px',
-            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
-          }}>
+          <div 
+            id="total-balance-card"
+            data-component="balance-summary"
+            style={{
+              backgroundColor: '#fff',
+              borderRadius: '12px',
+              padding: '24px',
+              marginBottom: '20px',
+              boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
+            }}
+          >
             <div style={{ marginBottom: '20px' }}>
               <p style={{ 
                 fontSize: '14px', 
@@ -434,12 +477,16 @@ function App() {
           </div>
 
           {/* Accounts List */}
-          <div style={{
-            backgroundColor: '#fff',
-            borderRadius: '12px',
-            padding: '20px',
-            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
-          }}>
+          <div 
+            id="accounts-list-card"
+            data-component="accounts-list"
+            style={{
+              backgroundColor: '#fff',
+              borderRadius: '12px',
+              padding: '20px',
+              boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
+            }}
+          >
             <h2 style={{
               fontSize: '18px',
               fontWeight: '600',
@@ -495,16 +542,25 @@ function App() {
 
         {/* Right Panel - Transactions */}
         {selectedAccount && (
-          <div style={{
-            flex: '1 1 600px',
-            minWidth: '300px'
-          }}>
-            <div style={{
-              backgroundColor: '#fff',
-              borderRadius: '12px',
-              padding: '20px',
-              boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
-            }}>
+          <div 
+            id="transactions-panel"
+            data-panel="transactions"
+            data-account-id={selectedAccount._id}
+            style={{
+              flex: '1 1 600px',
+              minWidth: '300px'
+            }}
+          >
+            <div 
+              id="transactions-card"
+              data-component="transactions-container"
+              style={{
+                backgroundColor: '#fff',
+                borderRadius: '12px',
+                padding: '20px',
+                boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
+              }}
+            >
               <TransactionList
                 transactions={transactions}
                 accountId={selectedAccount._id}
