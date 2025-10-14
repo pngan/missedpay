@@ -15,6 +15,9 @@ builder.Services.AddTenantProvider(builder.Configuration);
 // DbContext pooling is enabled (works because ITenantProvider is not in constructor)
 builder.AddNpgsqlDbContext<MissedPayDbContext>("missedpaydb");
 
+// Add Ollama client - MUST come before services that depend on it
+builder.AddOllamaApiClient("ollama");
+
 // Add CORS policy
 builder.Services.AddCors(options =>
 {
@@ -32,6 +35,16 @@ builder.Services.AddHttpClient<AkahuService>();
 // Register application services
 builder.Services.AddScoped<IAccountService, AccountService>();
 builder.Services.AddScoped<ITransactionService, TransactionService>();
+
+// Register categorization services
+builder.Services.AddSingleton<AiCategorySelector>();
+builder.Services.AddSingleton<HybridCategorySelector>();
+builder.Services.AddSingleton<ICategorySelector, AiCategorySelector>(sp => sp.GetRequiredService<AiCategorySelector>());
+builder.Services.AddSingleton<ICategorySelector, HybridCategorySelector>(sp => sp.GetRequiredService<HybridCategorySelector>());
+builder.Services.AddSingleton<IMerchantCategorizationService, MerchantCategorizationService>();
+
+// Keep legacy AI categorization service for backward compatibility
+builder.Services.AddSingleton<IAiCategorizationService, AiCategorizationService>();
 
 // Load Akahu tokens from environment variables
 builder.Configuration["Akahu:UserToken"] = Environment.GetEnvironmentVariable("AKAHU_USER_TOKEN") 
