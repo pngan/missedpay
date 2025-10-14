@@ -103,8 +103,19 @@ public class CategorizationController : ControllerBase
     [HttpGet("categories")]
     public ActionResult<Dictionary<string, List<CategoryMapping>>> GetAllCategories()
     {
-        var categories = _categorizationService.GetAllCategoriesGrouped();
-        return Ok(categories);
+        try
+        {
+            var categories = _categorizationService.GetAllCategoriesGrouped();
+            return Ok(categories);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting all categories");
+            return Problem(
+                title: "Failed to get categories",
+                detail: ex.Message,
+                statusCode: 500);
+        }
     }
 
     /// <summary>

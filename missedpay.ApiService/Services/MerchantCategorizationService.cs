@@ -72,6 +72,11 @@ public interface IMerchantCategorizationService
     /// Get all available categories grouped by personal finance group
     /// </summary>
     Dictionary<string, List<CategoryMapping>> GetAllCategoriesGrouped();
+
+    /// <summary>
+    /// Get cached categorization for a merchant (if exists)
+    /// </summary>
+    CategorizationResult? GetCachedCategorization(string merchantName);
 }
 
 /// <summary>
@@ -79,8 +84,8 @@ public interface IMerchantCategorizationService
 /// </summary>
 public class MerchantCategorizationService : IMerchantCategorizationService
 {
-    private readonly ICategorySelector _aiSelector;
-    private readonly ICategorySelector _hybridSelector;
+    private readonly ICategorySelector? _aiSelector;
+    private readonly ICategorySelector? _hybridSelector;
     private readonly ILogger<MerchantCategorizationService> _logger;
     private readonly List<CategoryMapping> _categories;
     private readonly Dictionary<string, CategorizationResult> _merchantCache;
@@ -93,11 +98,18 @@ public class MerchantCategorizationService : IMerchantCategorizationService
         _categories = LoadCategories();
         _merchantCache = new Dictionary<string, CategorizationResult>(StringComparer.OrdinalIgnoreCase);
 
-        // Get the specific selectors we need
-        _aiSelector = selectors.FirstOrDefault(s => s.Method == CategorizationMethod.AI)
-            ?? throw new InvalidOperationException("AI category selector not found");
-        _hybridSelector = selectors.FirstOrDefault(s => s.Method == CategorizationMethod.Hybrid)
-            ?? throw new InvalidOperationException("Hybrid category selector not found");
+        // Get the specific selectors we need (optional, may not be available if Ollama isn't configured)
+        _aiSelector = selectors.FirstOrDefault(s => s.Method == CategorizationMethod.AI);
+        _hybridSelector = selectors.FirstOrDefault(s => s.Method == CategorizationMethod.Hybrid);
+        
+        if (_aiSelector == null)
+        {
+            _logger.LogWarning("AI category selector not available. AI categorization will not work.");
+        }
+        if (_hybridSelector == null)
+        {
+            _logger.LogWarning("Hybrid category selector not available. Hybrid categorization will not work.");
+        }
     }
 
     public async Task<CategorizationResult?> CategorizeAsync(
@@ -115,8 +127,8 @@ public class MerchantCategorizationService : IMerchantCategorizationService
 
         CategorizationResult? result = method switch
         {
-            CategorizationMethod.AI => await _aiSelector.SelectCategoryAsync(merchantName, description, amount, _categories),
-            CategorizationMethod.Hybrid => await _hybridSelector.SelectCategoryAsync(merchantName, description, amount, _categories),
+            CategorizationMethod.AI when _aiSelector != null => await _aiSelector.SelectCategoryAsync(merchantName, description, amount, _categories),
+            CategorizationMethod.Hybrid when _hybridSelector != null => await _hybridSelector.SelectCategoryAsync(merchantName, description, amount, _categories),
             CategorizationMethod.Manual => null, // Manual requires UI interaction
             _ => null
         };
@@ -124,6 +136,14 @@ public class MerchantCategorizationService : IMerchantCategorizationService
         if (result != null)
         {
             _merchantCache[merchantName] = result;
+        }
+        else if (method == CategorizationMethod.AI && _aiSelector == null)
+        {
+            _logger.LogWarning("AI categorization requested but AI selector is not available");
+        }
+        else if (method == CategorizationMethod.Hybrid && _hybridSelector == null)
+        {
+            _logger.LogWarning("Hybrid categorization requested but Hybrid selector is not available");
         }
 
         return result;
@@ -135,6 +155,12 @@ public class MerchantCategorizationService : IMerchantCategorizationService
         decimal? amount = null,
         int maxSuggestions = 6)
     {
+        if (_hybridSelector == null)
+        {
+            _logger.LogWarning("Hybrid selector not available for getting suggestions");
+            return new List<CategorySuggestion>();
+        }
+        
         var suggestions = await _hybridSelector.GetSuggestionsAsync(merchantName, description, amount, _categories, maxSuggestions);
         return suggestions;
     }
@@ -176,6 +202,11 @@ public class MerchantCategorizationService : IMerchantCategorizationService
                 g => g.Key,
                 g => g.OrderBy(c => c.Name).ToList()
             );
+    }
+
+    public CategorizationResult? GetCachedCategorization(string merchantName)
+    {
+        return _merchantCache.TryGetValue(merchantName, out var result) ? result : null;
     }
 
     public static List<CategoryMapping> LoadCategories()
