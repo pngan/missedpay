@@ -8,11 +8,16 @@ public class TransactionController : ControllerBase
 {
     private readonly ITransactionService _transactionService;
     private readonly ITenantProvider _tenantProvider;
+    private readonly IMerchantCategorizationService _categorizationService;
     
-    public TransactionController(ITransactionService transactionService, ITenantProvider tenantProvider)
+    public TransactionController(
+        ITransactionService transactionService, 
+        ITenantProvider tenantProvider,
+        IMerchantCategorizationService categorizationService)
     {
         _transactionService = transactionService;
         _tenantProvider = tenantProvider;
+        _categorizationService = categorizationService;
     }
 
     // GET: api/Transaction
@@ -21,6 +26,10 @@ public class TransactionController : ControllerBase
     {
         var tenantId = _tenantProvider.GetTenantId();
         var transactions = await _transactionService.GetAllTransactionsAsync(tenantId);
+        
+        // Apply cached merchant categorizations to transactions
+        transactions = ApplyCachedCategorizations(transactions);
+        
         return Ok(transactions);
     }
 
@@ -84,5 +93,45 @@ public class TransactionController : ControllerBase
         }
 
         return NoContent();
+    }
+
+    private List<Transaction> ApplyCachedCategorizations(List<Transaction> transactions)
+    {
+        foreach (var transaction in transactions)
+        {
+            // Try to get merchant name from transaction
+            var merchantName = transaction.Merchant?.Name ?? transaction.Description;
+            
+            if (string.IsNullOrWhiteSpace(merchantName))
+                continue;
+
+            // Check if we have a cached categorization for this merchant
+            var cached = _categorizationService.GetCachedCategorization(merchantName);
+            
+            if (cached != null)
+            {
+                // Apply the cached categorization to the transaction
+                if (transaction.Category == null)
+                {
+                    transaction.Category = new TransactionCategory();
+                }
+                
+                transaction.Category.Id = cached.CategoryId;
+                transaction.Category.Name = cached.CategoryName;
+                
+                if (transaction.Category.Groups == null)
+                {
+                    transaction.Category.Groups = new Dictionary<string, CategoryGroup>();
+                }
+                
+                transaction.Category.Groups["personal_finance"] = new CategoryGroup
+                {
+                    Id = cached.GroupId,
+                    Name = cached.GroupName
+                };
+            }
+        }
+        
+        return transactions;
     }
 }
