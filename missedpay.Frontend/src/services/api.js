@@ -57,3 +57,32 @@ export const akahuApi = {
     return response.json();
   },
 };
+
+export const categorizationApi = {
+  async getAllCategories() {
+    const response = await fetch(`${API_BASE_URL}/Categorization/categories`, {
+      headers,
+      mode: 'cors',
+    });
+    if (!response.ok) throw new Error('Failed to fetch categories');
+    return response.json();
+  },
+
+  async confirmCategory(merchantName, categoryId) {
+    const response = await fetch(`${API_BASE_URL}/Categorization/confirm`, {
+      method: 'POST',
+      headers,
+      mode: 'cors',
+      body: JSON.stringify({
+        merchantName,
+        categoryId,
+        method: 'Manual' // CategorizationMethod.Manual
+      }),
+    });
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Failed to confirm category: ${errorText}`);
+    }
+    return response.json();
+  },
+};
