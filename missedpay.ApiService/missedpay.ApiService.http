@@ -17,6 +17,90 @@ Accept: application/json
 ###
 
 # =========================
+# Merchant Categorization Endpoints (NEW)
+# =========================
+
+### POST - Categorize merchant with AI
+POST {{ApiService_HostAddress}}/api/Categorization/categorize
+Content-Type: application/json
+
+{
+  "merchantName": "Spark",
+  "description": "Spark NZ Trading 29019229371",
+  "amount": -112.99
+}
+
+###
+
+### POST - Categorize Woolworths
+POST {{ApiService_HostAddress}}/api/Categorization/categorize
+Content-Type: application/json
+
+{
+  "merchantName": "Woolworths",
+  "description": "WOOLWORTHS NZ 9235 MT EDEN",
+  "amount": -42.00
+}
+
+###
+
+### POST - Get category suggestions (for hybrid/manual)
+POST {{ApiService_HostAddress}}/api/Categorization/suggestions
+Content-Type: application/json
+
+{
+  "merchantName": "Starbucks",
+  "description": "Coffee purchase",
+  "amount": -6.50,
+  "maxSuggestions": 6
+}
+
+###
+
+### POST - Get suggestions for gas station
+POST {{ApiService_HostAddress}}/api/Categorization/suggestions
+Content-Type: application/json
+
+{
+  "merchantName": "BP",
+  "description": "BP Service Station",
+  "amount": -85.00,
+  "maxSuggestions": 6
+}
+
+###
+
+### POST - Confirm category selection
+POST {{ApiService_HostAddress}}/api/Categorization/confirm
+Content-Type: application/json
+
+{
+  "merchantName": "Starbucks",
+  "categoryId": "nzfcc_ckouvvy84001908ml8s9z4d8m",
+  "method": "Manual"
+}
+
+###
+
+### GET - Get all categories grouped
+GET {{ApiService_HostAddress}}/api/Categorization/categories
+Accept: application/json
+
+###
+
+### GET - Get categories for Food group
+GET {{ApiService_HostAddress}}/api/Categorization/categories/Food
+Accept: application/json
+
+###
+
+### GET - Get categories for Transport group
+GET {{ApiService_HostAddress}}/api/Categorization/categories/Transport
+Accept: application/json
+
+###
+
+# =========================
 # Account Endpoints
 # =========================
 
