@@ -620,7 +620,7 @@ function App() {
         </div>
       ) : (
         /* Budgeting View */
-        <BudgetingView transactions={transactions} />
+        <BudgetingView transactions={transactions} onTransactionUpdate={loadData} />
       )}
     </div>
   );

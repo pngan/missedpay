@@ -1,9 +1,96 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
+import CategoryPicker from './CategoryPicker';
+import { categorizationApi } from '../services/api';
 
-const BudgetingView = ({ transactions }) => {
+const BudgetingView = ({ transactions, onTransactionUpdate }) => {
   const [selectedGroup, setSelectedGroup] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [sortOrder, setSortOrder] = useState('date'); // 'date' or 'amount'
+  const [categorizingTransaction, setCategorizingTransaction] = useState(null);
+  const [categorizingInProgress, setCategorizingInProgress] = useState(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const pendingTransactionIdRef = useRef(null);
+
+  // Effect to load pending transaction after refresh
+  useEffect(() => {
+    const pendingId = sessionStorage.getItem('pendingCategorizationId');
+    
+    if (!isRefreshing && pendingId && transactions) {
+      sessionStorage.removeItem('pendingCategorizationId');
+      
+      // Build fresh groups from updated transactions
+      const groups = {};
+      let uncategorizedTransactions = [];
+      
+      transactions.forEach(transaction => {
+        if (transaction.amount >= 0) return;
+        
+        const personalFinanceGroup = transaction.category?.groups?.personal_finance;
+        
+        if (!personalFinanceGroup) {
+          uncategorizedTransactions.push(transaction);
+          return;
+        }
+        
+        const groupName = personalFinanceGroup.name;
+        if (!groupName) return;
+
+        if (!groups[groupName]) {
+          groups[groupName] = {
+            name: groupName,
+            id: personalFinanceGroup._id,
+            categories: {}
+          };
+        }
+
+        const categoryName = transaction.category?.name;
+        if (categoryName) {
+          if (!groups[groupName].categories[categoryName]) {
+            groups[groupName].categories[categoryName] = {
+              name: categoryName,
+              id: transaction.category._id,
+              transactions: []
+            };
+          }
+          groups[groupName].categories[categoryName].transactions.push(transaction);
+        }
+      });
+
+      // Add uncategorized
+      if (uncategorizedTransactions.length > 0) {
+        groups['Uncategorized'] = {
+          name: 'Uncategorized',
+          id: 'uncategorized',
+          categories: {
+            'No category data': {
+              name: 'No category data',
+              id: 'no-category',
+              transactions: uncategorizedTransactions
+            }
+          }
+        };
+      }
+      
+      // Find the transaction by ID
+      let foundTransaction = null;
+      
+      for (const group of Object.values(groups)) {
+        for (const category of Object.values(group.categories)) {
+          foundTransaction = category.transactions.find(t => t._id === pendingId);
+          if (foundTransaction) break;
+        }
+        if (foundTransaction) break;
+      }
+      
+      if (foundTransaction) {
+        setCategorizingTransaction(foundTransaction);
+        setIsRefreshing(false);  // Clear refresh flag after loading
+      } else {
+        setCategorizingTransaction(null);
+        setIsRefreshing(false);
+      }
+    }
+  }, [isRefreshing, transactions]);
 
   const formatCurrency = (amount) => {
     return '$' + new Intl.NumberFormat('en-US', {
@@ -137,6 +224,116 @@ const BudgetingView = ({ transactions }) => {
     if (name.includes('internet')) return '🌐';
     if (name.includes('water')) return '💧';
     return '📊';
+  };
+
+  const handleCategorySelect = async (category) => {
+    if (!categorizingTransaction) return;
+    
+    const currentTransactionId = categorizingTransaction._id;
+    const categorizedMerchantName = categorizingTransaction.merchant?.name || categorizingTransaction.description;
+    
+    setCategorizingInProgress(currentTransactionId);
+    
+    try {
+      // Call the API to save the merchant→category mapping
+      await categorizationApi.confirmCategory(
+        categorizedMerchantName,
+        category.id
+      );
+      
+      // Find the next uncategorized transaction ID BEFORE refresh
+      const nextTransactionId = findNextUncategorizedTransaction(currentTransactionId, categorizedMerchantName);
+      
+      if (nextTransactionId) {
+        // Store the pending transaction ID in sessionStorage (survives component remounts)
+        sessionStorage.setItem('pendingCategorizationId', nextTransactionId);
+      } else {
+        sessionStorage.removeItem('pendingCategorizationId');
+      }
+      
+      // Set refreshing flag BEFORE calling onTransactionUpdate
+      setIsRefreshing(true);
+      
+      // Notify parent to refresh transactions
+      if (onTransactionUpdate) {
+        await onTransactionUpdate();
+      }
+      
+    } catch (error) {
+      console.error('Failed to save category:', error);
+      alert('Failed to save category. Please try again.');
+      sessionStorage.removeItem('pendingCategorizationId');
+      setCategorizingInProgress(null);
+      setIsRefreshing(false);
+    }
+    
+    // Clear in-progress state (useEffect will handle loading next transaction)
+    setCategorizingInProgress(null);
+  };
+
+  const findNextUncategorizedTransaction = (currentTransactionId, categorizedMerchant) => {
+    // Get all transactions from all categories (including uncategorized)
+    const allTransactions = [];
+    
+    groupAggregates.forEach(group => {
+      Object.values(group.categories).forEach(category => {
+        category.transactions.forEach(transaction => {
+          allTransactions.push(transaction);
+        });
+      });
+    });
+    
+    // Filter to only uncategorized transactions (those without a category or in "Uncategorized" group)
+    const uncategorizedTransactions = allTransactions.filter(t => {
+      // Skip transactions from the merchant we just categorized (they'll be updated on next refresh)
+      const merchantName = t.merchant?.name || t.description;
+      if (merchantName === categorizedMerchant) {
+        return false;
+      }
+      
+      // Check if transaction is uncategorized
+      const hasCategory = t.category && 
+                         t.category.groups && 
+                         t.category.groups.personal_finance &&
+                         t.category.groups.personal_finance.name !== 'Uncategorized';
+      
+      return !hasCategory;
+    });
+    
+    // Find the current transaction's index
+    const currentIndex = uncategorizedTransactions.findIndex(t => t._id === currentTransactionId);
+    
+    // Return the ID of the next one, or the first one if current is not found or is the last
+    if (currentIndex >= 0 && currentIndex < uncategorizedTransactions.length - 1) {
+      return uncategorizedTransactions[currentIndex + 1]._id;
+    } else if (uncategorizedTransactions.length > 0) {
+      return uncategorizedTransactions[0]._id;
+    }
+    
+    return null;
+  };
+
+  const countUncategorizedTransactions = () => {
+    // Get all transactions from all categories
+    const allTransactions = [];
+    
+    groupAggregates.forEach(group => {
+      Object.values(group.categories).forEach(category => {
+        category.transactions.forEach(transaction => {
+          allTransactions.push(transaction);
+        });
+      });
+    });
+    
+    // Count uncategorized transactions
+    return allTransactions.filter(t => {
+      const hasCategory = t.category && 
+                         t.category.groups && 
+                         t.category.groups.personal_finance &&
+                         t.category.groups.personal_finance.name !== 'Uncategorized';
+      
+      return !hasCategory;
+    }).length;
   };
 
   if (transactions.length === 0) {
@@ -685,6 +882,38 @@ const BudgetingView = ({ transactions }) => {
                     }}>
                       {formatCurrency(transaction.amount)}
                     </span>
+
+                    {/* Categorize Button */}
+                    <button
+                      onClick={() => setCategorizingTransaction(transaction)}
+                      disabled={categorizingInProgress === transaction._id}
+                      style={{
+                        padding: '6px 12px',
+                        fontSize: '12px',
+                        fontWeight: '500',
+                        color: '#3b82f6',
+                        backgroundColor: 'transparent',
+                        border: '1px solid #3b82f6',
+                        borderRadius: '6px',
+                        cursor: categorizingInProgress === transaction._id ? 'not-allowed' : 'pointer',
+                        whiteSpace: 'nowrap',
+                        flex: '0 0 auto',
+                        opacity: categorizingInProgress === transaction._id ? 0.5 : 1,
+                        transition: 'all 0.2s ease'
+                      }}
+                      onMouseEnter={(e) => {
+                        if (categorizingInProgress !== transaction._id) {
+                          e.currentTarget.style.backgroundColor = '#3b82f6';
+                          e.currentTarget.style.color = '#fff';
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = 'transparent';
+                        e.currentTarget.style.color = '#3b82f6';
+                      }}
+                    >
+                      {categorizingInProgress === transaction._id ? '...' : '📝 Categorize'}
+                    </button>
                   </div>
                 ))}
             </div>
@@ -735,6 +964,19 @@ const BudgetingView = ({ transactions }) => {
           </div>
         </div>
       )}
+
+      {/* Category Picker Modal */}
+      <CategoryPicker
+        isOpen={categorizingTransaction !== null}
+        onClose={() => setCategorizingTransaction(null)}
+        onSelect={handleCategorySelect}
+        merchantName={categorizingTransaction?.merchant?.name || categorizingTransaction?.description}
+        currentCategory={categorizingTransaction?.category ? {
+          name: categorizingTransaction.category.name,
+          groupName: categorizingTransaction.category.groups?.personal_finance?.name
+        } : null}
+        remainingCount={countUncategorizedTransactions()}
+      />
     </div>
   );
 };
